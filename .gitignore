@@ -1,0 +1,10 @@
+*
+*/*
+
+!.gitignore
+!brittany.yaml
+!weblisp.cabal
+!src
+!src/**
+!examples
+!examples/**

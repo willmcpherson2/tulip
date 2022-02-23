@@ -1,0 +1,38 @@
+cabal-version: 3.6
+name: weblisp
+version: 0.1.0.0
+
+common shared
+  default-language: Haskell2010
+  default-extensions:
+    LambdaCase
+    , MultiWayIf
+    , OverloadedStrings
+    , OverloadedLists
+    , NamedFieldPuns
+  ghc-options:
+    -Weverything
+    -Wno-implicit-prelude
+    -Wno-name-shadowing
+    -Wno-unused-do-bind
+    -Wno-monomorphism-restriction
+    -Wno-all-missed-specialisations
+    -Wno-missing-deriving-strategies
+    -Wno-missing-safe-haskell-mode
+    -Wno-safe
+    -Wno-unsafe
+    -Wno-missing-local-signatures
+    -Wno-missing-import-lists
+    -Wno-prepositive-qualified-module
+
+executable weblisp
+  import: shared
+  hs-source-dirs: src
+  main-is: Main.hs
+  other-modules:
+    Parse
+  build-depends:
+    base
+    , directory
+    , pretty-simple
+    , megaparsec
