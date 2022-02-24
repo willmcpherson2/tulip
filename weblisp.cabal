@@ -31,6 +31,8 @@ executable weblisp
   main-is: Main.hs
   other-modules:
     Parse
+    , Generate
+    , Eval
   build-depends:
     base
     , directory

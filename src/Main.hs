@@ -1,5 +1,7 @@
 module Main (main) where
 
+import Eval (eval)
+import Generate (Code, generate)
 import Parse (Ast, parse)
 import System.Directory (doesFileExist)
 import System.Environment (getArgs)
@@ -8,6 +10,8 @@ import Text.Pretty.Simple (pPrint)
 data Compilation = Compilation
   { source :: String
   , ast :: Ast
+  , code :: Code
+  , result :: Code
   }
   deriving Show
 
@@ -25,4 +29,6 @@ compile :: String -> Compilation
 compile source =
   let
     ast = parse source
-  in Compilation { source, ast }
+    code = generate ast
+    result = eval code
+  in Compilation { source, ast, code, result }
