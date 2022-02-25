@@ -4,4 +4,6 @@
 
 (not [x (x false true)])
 
-(notTrueIsFalse (not true))
+(print [b (b True False)])
+
+(main (print (not true)))
