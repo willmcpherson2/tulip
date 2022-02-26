@@ -2,6 +2,7 @@
 */*
 
 !.gitignore
+!LICENSE
 !brittany.yaml
 !weblisp.cabal
 !src
