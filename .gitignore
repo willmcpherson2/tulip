@@ -4,7 +4,7 @@
 !.gitignore
 !LICENSE
 !brittany.yaml
-!weblisp.cabal
+!tulip.cabal
 !src
 !src/**
 !examples

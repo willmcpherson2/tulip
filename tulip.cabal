@@ -1,5 +1,5 @@
 cabal-version: 3.6
-name: weblisp
+name: tulip
 version: 0.1.0.0
 
 common shared
@@ -25,7 +25,7 @@ common shared
     -Wno-missing-import-lists
     -Wno-prepositive-qualified-module
 
-executable weblisp
+executable tulip
   import: shared
   hs-source-dirs: src
   main-is: Main.hs
