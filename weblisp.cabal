@@ -35,6 +35,7 @@ executable weblisp
     , Eval
   build-depends:
     base
+    , extra
     , directory
     , pretty-simple
     , megaparsec

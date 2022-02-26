@@ -1,4 +1,13 @@
-module Parse (Ast(..), Def(..), Term(..), Var(..), Fun(..), App(..), Name(..), parse) where
+module Parse
+  ( Ast(..)
+  , Def(..)
+  , Term(..)
+  , Var(..)
+  , Fun(..)
+  , App(..)
+  , Name(..)
+  , parse
+  ) where
 
 import Data.Functor (($>))
 import Data.Void (Void)

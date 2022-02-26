@@ -1,71 +1,35 @@
-module Generate (Term(..), Fun(..), App(..), Var(..), Name(..), generate) where
+module Generate (generate) where
 
-import Data.Maybe (mapMaybe)
-import Parse (Ast(Ast))
-import qualified Parse as P
-
-data Term
-  = TermFun Fun
-  | TermApp App
-  | TermVar Var
-  deriving Show
-
-newtype Var = Var Name
-  deriving Show
-
-data Fun = Fun Name Term
-  deriving Show
-
-data App = App Term Term
-  deriving Show
-
-data Name
-  = Name String
-  | Blank
-  deriving Show
+import Data.List.Extra (firstJust)
+import Data.Maybe (fromMaybe)
+import Eval (throw, throwMsg)
+import Parse
 
 generate :: Ast -> Term
 generate = \case
-  Ast defs -> inline "main" $ mapMaybe genDef defs
-  _ -> inline "main" []
+  Ast defs -> fromMaybe (throwMsg "main not found") (inline "main" defs)
+  AstError msg pos -> throw pos msg
 
-genDef :: P.Def -> Maybe (String, Term)
-genDef = \case
-  P.Def (P.Name name _) term _ -> genTerm term >>= (\term -> Just (name, term))
+inline :: String -> [Def] -> Maybe Term
+inline name defs = case resolve name (reverse defs) of
+  Just term -> Just $ inlineTerm defs term
+  Nothing -> Nothing
+
+resolve :: String -> [Def] -> Maybe Term
+resolve name = firstJust $ \case
+  Def (Name defName _) term _ -> if name == defName then Just term else Nothing
   _ -> Nothing
 
-genTerm :: P.Term -> Maybe Term
-genTerm = \case
-  P.TermFun fun -> TermFun <$> genFun fun
-  P.TermApp app -> TermApp <$> genApp app
-  P.TermVar var -> TermVar <$> genVar var
-  _ -> Nothing
-
-genFun :: P.Fun -> Maybe Fun
-genFun (P.Fun param body _) = case param of
-  P.Name name _ -> Fun (Name name) <$> genTerm body
-  _ -> Fun Blank <$> genTerm body
-
-genApp :: P.App -> Maybe App
-genApp (P.App l r _) = App <$> genTerm l <*> genTerm r
-
-genVar :: P.Var -> Maybe Var
-genVar (P.Var name _) = case name of
-  P.Name name _ -> Just $ Var $ Name name
-  P.Blank _ -> Just $ Var Blank
-  _ -> Nothing
-
---------------------------------------------------------------------------------
-
-inline :: String -> [(String, Term)] -> Term
-inline name defs = case lookup name (reverse defs) of
-  Just term -> inlineTerm defs term
-  Nothing -> TermVar $ Var $ Name name
-
-inlineTerm :: [(String, Term)] -> Term -> Term
+inlineTerm :: [Def] -> Term -> Term
 inlineTerm defs = \case
-  TermFun (Fun param body) -> TermFun $ Fun param $ inlineTerm defs body
-  TermApp (App l r) -> TermApp $ App (inlineTerm defs l) (inlineTerm defs r)
-  TermVar (Var var) -> case var of
-    Name name -> inline name defs
-    Blank -> TermVar $ Var Blank
+  TermFun (Fun param body pos) ->
+    TermFun $ Fun param (inlineTerm defs body) pos
+  TermApp (App l r pos) ->
+    TermApp $ App (inlineTerm defs l) (inlineTerm defs r) pos
+  TermVar (Var var pos) -> case var of
+    Name name namePos -> case inline name defs of
+      Just term -> term
+      Nothing -> TermVar $ Var (Name name namePos) pos
+    Blank blankPos -> TermVar $ Var (Blank blankPos) pos
+    err -> TermVar $ Var err pos
+  err -> err

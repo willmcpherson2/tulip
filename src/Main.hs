@@ -1,8 +1,8 @@
 module Main (main) where
 
 import Eval (eval)
-import Generate (Term, generate)
-import Parse (Ast, parse)
+import Generate (generate)
+import Parse (Ast, Term, parse)
 import System.Directory (doesFileExist)
 import System.Environment (getArgs)
 import Text.Pretty.Simple (pPrint)
