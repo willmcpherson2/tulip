@@ -22,11 +22,14 @@ import Text.Megaparsec
   , errorBundlePretty
   , getSourcePos
   , many
+  , noneOf
+  , oneOf
   , parseErrorTextPretty
   , runParser
+  , skipMany
   , some
   )
-import Text.Megaparsec.Char (alphaNumChar, char, space)
+import Text.Megaparsec.Char (char)
 
 --------------------------------------------------------------------------------
 
@@ -57,7 +60,7 @@ data App = App Term Term SourcePos
   deriving Show
 
 data Name
-  = Name String SourcePos
+  = Ident String SourcePos
   | Blank SourcePos
   | NameError String SourcePos
   deriving Show
@@ -90,7 +93,7 @@ instance GetPos Var where
 
 instance GetPos Name where
   getPos = \case
-    Name _ pos -> pos
+    Ident _ pos -> pos
     Blank pos -> pos
     NameError _ pos -> pos
 
@@ -127,10 +130,10 @@ parseAst = do
 parseDef :: Parser Def
 parseDef = fallback DefError $ do
   pos <- getSourcePos
-  parseOpenParen
+  openParen
   name <- parseName
   term <- parseTerm
-  parseCloseParen
+  closeParen
   pure $ Def name term pos
 
 parseTerm :: Parser Term
@@ -146,7 +149,7 @@ parseTerm =
 parseFun :: Parser Fun
 parseFun = do
   pos <- getSourcePos
-  parseOpenBracket
+  openBracket
   Fun l r _ <- parseInnerFun
   pure $ Fun l r pos
   where
@@ -158,12 +161,12 @@ parseFun = do
       pure $ Fun param body pos
 
     parseBody :: Parser Term
-    parseBody = parseTerm <* parseCloseBracket
+    parseBody = parseTerm <* closeBracket
 
 parseApp :: Parser App
 parseApp = do
   pos <- getSourcePos
-  parseOpenParen
+  openParen
   l <- parseTerm
   r <- parseTerm
   parseInnerApp $ App l r pos
@@ -172,7 +175,7 @@ parseApp = do
     parseInnerApp app = try (parseAppTerminal app) <|> parseNestedApp app
 
     parseAppTerminal :: App -> Parser App
-    parseAppTerminal app = parseCloseParen $> app
+    parseAppTerminal app = closeParen $> app
 
     parseNestedApp :: App -> Parser App
     parseNestedApp (App appL appR appPos) = do
@@ -199,18 +202,24 @@ parseBlank = do
 parseIdent :: Parser Name
 parseIdent = do
   pos <- getSourcePos
-  ident <- some alphaNumChar
+  ident <- some ident
   space
-  pure $ Name ident pos
+  pure $ Ident ident pos
 
-parseOpenParen :: Parser ()
-parseOpenParen = char '(' *> space
+ident :: Parser Char
+ident = noneOf (['_', '(', ')', '[', ']', ' ', '\t', '\n', '\r'] :: [Char])
 
-parseCloseParen :: Parser ()
-parseCloseParen = char ')' *> space
+openParen :: Parser ()
+openParen = char '(' *> space
 
-parseOpenBracket :: Parser ()
-parseOpenBracket = char '[' *> space
+closeParen :: Parser ()
+closeParen = char ')' *> space
 
-parseCloseBracket :: Parser ()
-parseCloseBracket = char ']' *> space
+openBracket :: Parser ()
+openBracket = char '[' *> space
+
+closeBracket :: Parser ()
+closeBracket = char ']' *> space
+
+space :: Parser ()
+space = skipMany $ oneOf ([' ', '\t', '\n', '\r'] :: [Char])

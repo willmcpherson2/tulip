@@ -1,23 +1,23 @@
-(z [f x x])
+(0 [f x x])
 
 (s [n
   [f x (f n)]])
 
-(plus [x y
+(+ [x y
   (x
-    [n (s (plus n y))]
+    [n (s (+ n y))]
     y)])
 
-(greater [x y
+(> [x y
   (x
     [n
       (y
-        [m (greater n m)]
+        [m (> n m)]
         True)]
     False)])
 
-(one (s z))
+(1 (s 0))
 
-(two (plus one one))
+(2 (+ 1 1))
 
-(main (greater two one))
+(main (> 2 1))

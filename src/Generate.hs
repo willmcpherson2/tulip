@@ -11,13 +11,14 @@ generate = \case
   AstError msg pos -> throw pos msg
 
 inline :: String -> [Def] -> Maybe Term
-inline name defs = case resolve name (reverse defs) of
+inline ident defs = case resolve ident (reverse defs) of
   Just term -> Just $ inlineTerm defs term
   Nothing -> Nothing
 
 resolve :: String -> [Def] -> Maybe Term
-resolve name = firstJust $ \case
-  Def (Name defName _) term _ -> if name == defName then Just term else Nothing
+resolve ident = firstJust $ \case
+  Def (Ident defIdent _) term _ ->
+    if ident == defIdent then Just term else Nothing
   _ -> Nothing
 
 inlineTerm :: [Def] -> Term -> Term
@@ -27,9 +28,9 @@ inlineTerm defs = \case
   TermApp (App l r pos) ->
     TermApp $ App (inlineTerm defs l) (inlineTerm defs r) pos
   TermVar (Var var pos) -> case var of
-    Name name namePos -> case inline name defs of
+    Ident ident identPos -> case inline ident defs of
       Just term -> term
-      Nothing -> TermVar $ Var (Name name namePos) pos
+      Nothing -> TermVar $ Var (Ident ident identPos) pos
     Blank blankPos -> TermVar $ Var (Blank blankPos) pos
     err -> TermVar $ Var err pos
   err -> err

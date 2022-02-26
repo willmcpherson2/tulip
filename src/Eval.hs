@@ -8,7 +8,7 @@ eval = \case
   TermFun fun -> TermFun fun
   TermApp app -> evalApp app
   TermVar (Var var pos) -> case var of
-    Name name namePos -> TermVar $ Var (Name name namePos) pos
+    Ident ident identPos -> TermVar $ Var (Ident ident identPos) pos
     Blank blankPos -> throw blankPos "evaluated hole"
     NameError msg pos -> throw pos msg
   TermError msg pos -> throw pos msg
@@ -22,16 +22,16 @@ throwMsg = error
 evalApp :: App -> Term
 evalApp (App l r pos) = case l of
   TermFun (Fun param body _) -> case param of
-    Name param _ -> eval $ replace param body r
+    Ident param _ -> eval $ replace param body r
     Blank _ -> eval body
     NameError msg pos -> throw pos msg
   TermApp (App l' r' appPos) ->
     eval $ TermApp $ App (eval $ TermApp $ App l' r' appPos) r pos
   TermVar (Var name _) -> case name of
-    Name name namePos ->
-      throw namePos $ "application on symbol `" ++ name ++ "`"
+    Ident ident identPos ->
+      throw identPos $ "application on symbol `" ++ ident ++ "`"
     Blank blankPos -> throw blankPos "application on hole"
-    NameError name pos -> throw pos name
+    NameError msg pos -> throw pos msg
   TermError msg pos -> throw pos msg
 
 replace :: String -> Term -> Term -> Term
@@ -43,9 +43,9 @@ replace param body term = case body of
 
 replaceFun :: String -> Fun -> Term -> Fun
 replaceFun param fun term = case fun of
-  Fun (Name param' namePos) body pos -> if param' == param
+  Fun (Ident param' paramPos) body pos -> if param' == param
     then fun
-    else Fun (Name param' namePos) (replace param body term) pos
+    else Fun (Ident param' paramPos) (replace param body term) pos
   Fun (Blank blankPos) body pos ->
     Fun (Blank blankPos) (replace param body term) pos
   Fun (NameError msg pos) _ _ -> throw pos msg
@@ -56,7 +56,7 @@ replaceApp param (App l r pos) term =
 
 replaceVar :: String -> Var -> Term -> Term
 replaceVar param (Var name pos) term = case name of
-  Name name namePos ->
-    if name == param then term else TermVar $ Var (Name name namePos) pos
+  Ident ident identPos ->
+    if ident == param then term else TermVar $ Var (Ident ident identPos) pos
   Blank blankPos -> TermVar $ Var (Blank blankPos) pos
   NameError msg pos -> throw pos msg
