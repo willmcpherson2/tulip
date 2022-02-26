@@ -3,6 +3,7 @@
 
 !.gitignore
 !LICENSE
+!README.md
 !brittany.yaml
 !tulip.cabal
 !src
