@@ -2,13 +2,12 @@ module Generate (generate) where
 
 import Data.List.Extra (firstJust)
 import Data.Maybe (fromMaybe)
-import Eval (throw, throwMsg)
 import Parse
 
 generate :: Ast -> Term
 generate = \case
-  Ast defs -> fromMaybe (throwMsg "main not found") (inline "main" defs)
-  AstError msg pos -> throw pos msg
+  Ast defs -> fromMaybe (TermError "" undefined) (inline "main" defs)
+  AstError msg pos -> TermError msg pos
 
 inline :: String -> [Def] -> Maybe Term
 inline ident defs = case resolve ident (reverse defs) of
