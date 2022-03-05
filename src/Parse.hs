@@ -10,16 +10,16 @@ module Parse
   ) where
 
 import Data.Functor (($>))
+import qualified Data.List.NonEmpty as N
 import Data.Void (Void)
 import Text.Megaparsec
   ( (<|>)
   , MonadParsec(eof, try, withRecovery)
-  , ParseErrorBundle(bundlePosState)
+  , ParseErrorBundle(bundleErrors, bundlePosState)
   , Parsec
   , PosState(pstateSourcePos)
   , SourcePos
   , anySingle
-  , errorBundlePretty
   , getSourcePos
   , many
   , noneOf
@@ -109,7 +109,7 @@ mkTotal fromErr parser source = case runParser parser "" source of
   Left err ->
     let
       pos = pstateSourcePos $ bundlePosState err
-      msg = errorBundlePretty err
+      msg = parseErrorTextPretty $ N.head $ bundleErrors err
     in fromErr msg pos
   Right ok -> ok
 
