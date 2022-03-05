@@ -57,9 +57,9 @@ instance GetPos Def where
 
 instance GetPos Term where
   getPos = \case
-    TermFun x -> getPos x
-    TermApp x -> getPos x
-    TermVar x -> getPos x
+    TermFun fun -> getPos fun
+    TermApp app -> getPos app
+    TermVar var -> getPos var
     TermError _ pos -> pos
 
 instance GetPos Fun where
