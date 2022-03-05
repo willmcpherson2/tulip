@@ -3,10 +3,12 @@ module Generate (generate) where
 import Data.List.Extra (firstJust)
 import Data.Maybe (fromMaybe)
 import Parse
+import Text.Megaparsec (initialPos)
 
 generate :: Ast -> Term
 generate = \case
-  Ast defs -> fromMaybe (TermError "" undefined) (inline "main" defs)
+  Ast defs ->
+    fromMaybe (TermError "no `main` found" $ initialPos "") (inline "main" defs)
   AstError msg pos -> TermError msg pos
 
 inline :: String -> [Def] -> Maybe Term
