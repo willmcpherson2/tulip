@@ -33,6 +33,7 @@ executable tulip
     Parse
     , Generate
     , Eval
+    , Ast
   build-depends:
     base
     , extra
