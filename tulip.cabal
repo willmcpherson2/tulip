@@ -38,5 +38,4 @@ executable tulip
     base
     , extra
     , directory
-    , pretty-simple
     , megaparsec

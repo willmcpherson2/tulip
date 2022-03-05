@@ -1,17 +1,17 @@
 module Main (main) where
 
+import Ast (Display(display))
 import Eval (eval)
 import Generate (generate)
-import Parse (Ast, Term, parse)
+import Parse (parse)
 import System.Directory (doesFileExist)
 import System.Environment (getArgs)
-import Text.Pretty.Simple (pPrint)
 
 data Compilation = Compilation
   { source :: String
-  , ast :: Ast
-  , term :: Term
-  , result :: Term
+  , ast :: String
+  , term :: String
+  , result :: String
   }
   deriving Show
 
@@ -21,7 +21,7 @@ main = getArgs >>= \case
     doesFileExist filename >>= \case
       True -> do
         source <- readFile filename
-        pPrint $ result $ compile source
+        putStrLn $ result $ compile source
       False -> putStrLn "no such file exists"
   _ -> putStrLn "please supply a file"
 
@@ -31,4 +31,9 @@ compile source =
     ast = parse source
     term = generate ast
     result = eval term
-  in Compilation { source, ast, term, result }
+  in Compilation
+    { source
+    , ast = display ast
+    , term = display term
+    , result = display result
+    }

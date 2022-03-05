@@ -8,7 +8,7 @@ eval = \case
   TermApp app -> evalApp app
   TermVar (Var var pos) -> case var of
     Ident ident identPos -> TermVar $ Var (Ident ident identPos) pos
-    Blank blankPos -> TermError "evaluated hole" blankPos
+    Blank blankPos -> TermError "evaluated hole\n" blankPos
     NameError msg pos -> TermError msg pos
   TermError msg pos -> TermError msg pos
 
@@ -26,8 +26,8 @@ evalApp (App l r pos) = case l of
         _ -> eval $ TermApp $ App l'' r pos
   TermVar (Var name _) -> case name of
     Ident ident identPos ->
-      TermError ("application on symbol `" ++ ident ++ "`") identPos
-    Blank blankPos -> TermError "application on hole" blankPos
+      TermError ("application on symbol `" ++ ident ++ "`\n") identPos
+    Blank blankPos -> TermError "application on hole\n" blankPos
     NameError msg pos -> TermError msg pos
   TermError msg pos -> TermError msg pos
 

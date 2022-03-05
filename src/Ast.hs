@@ -7,9 +7,11 @@ module Ast
   , App(..)
   , Name(..)
   , GetPos(..)
+  , Display(..)
   ) where
 
-import Text.Megaparsec (SourcePos)
+import Data.List (intercalate)
+import Text.Megaparsec (SourcePos, sourcePosPretty)
 
 data Ast
   = Ast [Def]
@@ -74,3 +76,44 @@ instance GetPos Name where
     Ident _ pos -> pos
     Blank pos -> pos
     NameError _ pos -> pos
+
+--------------------------------------------------------------------------------
+
+class Display a where
+  display :: a -> String
+
+instance Display Ast where
+  display = \case
+    Ast defs -> intercalate "\n" (map display defs)
+    AstError msg pos -> displayErr msg pos
+
+instance Display Def where
+  display = \case
+    Def name term _ -> "(" ++ display name ++ " " ++ display term ++ ")"
+    DefError msg pos -> displayErr msg pos
+
+instance Display Term where
+  display = \case
+    TermFun fun -> display fun
+    TermApp app -> display app
+    TermVar var -> display var
+    TermError msg pos -> displayErr msg pos
+
+instance Display Fun where
+  display (Fun param body _) =
+    "[" ++ display param ++ " " ++ display body ++ "]"
+
+instance Display App where
+  display (App l r _) = "(" ++ display l ++ " " ++ display r ++ ")"
+
+instance Display Var where
+  display (Var name _) = display name
+
+instance Display Name where
+  display = \case
+    Ident s _ -> s
+    Blank _ -> "_"
+    NameError msg pos -> displayErr msg pos
+
+displayErr :: String -> SourcePos -> String
+displayErr msg pos = msg ++ "at " ++ sourcePosPretty pos
