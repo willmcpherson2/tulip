@@ -112,7 +112,7 @@ instance Display Var where
 instance Display Name where
   display = \case
     Ident s _ -> s
-    Blank _ -> "_"
+    Blank{} -> "_"
     NameError msg pos -> displayErr msg pos
 
 displayErr :: String -> SourcePos -> String

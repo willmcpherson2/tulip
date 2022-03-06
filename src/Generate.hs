@@ -7,14 +7,13 @@ import Text.Megaparsec (initialPos)
 
 generate :: Ast -> Term
 generate = \case
-  Ast defs ->
-    fromMaybe (TermError "no `main` found\n" $ initialPos "") (inline "main" defs)
+  Ast defs -> fromMaybe
+    (TermError "no `main` found\n" $ initialPos "")
+    (inline "main" defs)
   AstError msg pos -> TermError msg pos
 
 inline :: String -> [Def] -> Maybe Term
-inline ident defs = case resolve ident (reverse defs) of
-  Just term -> Just $ inlineTerm defs term
-  Nothing -> Nothing
+inline ident defs = inlineTerm defs <$> resolve ident (reverse defs)
 
 resolve :: String -> [Def] -> Maybe Term
 resolve ident = firstJust $ \case
@@ -28,10 +27,8 @@ inlineTerm defs = \case
     TermFun $ Fun param (inlineTerm defs body) pos
   TermApp (App l r pos) ->
     TermApp $ App (inlineTerm defs l) (inlineTerm defs r) pos
-  TermVar (Var var pos) -> case var of
-    Ident ident identPos -> case inline ident defs of
-      Just term -> term
-      Nothing -> TermVar $ Var (Ident ident identPos) pos
-    Blank blankPos -> TermVar $ Var (Blank blankPos) pos
-    err -> TermVar $ Var err pos
-  err -> err
+  var@(TermVar (Var name _)) -> case name of
+    Ident ident _ -> fromMaybe var (inline ident defs)
+    Blank{} -> var
+    NameError msg pos -> TermError msg pos
+  err@TermError{} -> err
