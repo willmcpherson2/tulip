@@ -37,3 +37,10 @@ compile source =
     , term = display term
     , result = display result
     }
+
+dump :: Compilation -> IO ()
+dump Compilation { source, ast, term, result } =
+  let
+    lines =
+      ["Source:", source, "\nAst:", ast, "\nTerm:", term, "\nResult:", result]
+  in mapM_ putStrLn (lines :: [String])
