@@ -8,7 +8,7 @@ import Text.Megaparsec (initialPos)
 generate :: Ast -> Term
 generate = \case
   Ast defs ->
-    fromMaybe (TermError "no `main` found" $ initialPos "") (inline "main" defs)
+    fromMaybe (TermError "no `main` found\n" $ initialPos "") (inline "main" defs)
   AstError msg pos -> TermError msg pos
 
 inline :: String -> [Def] -> Maybe Term
