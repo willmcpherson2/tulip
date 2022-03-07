@@ -1,4 +1,4 @@
-module Main (main) where
+module Main (Pipeline(..), main, compile, dump) where
 
 import Ast (Display(display))
 import Eval (eval)
