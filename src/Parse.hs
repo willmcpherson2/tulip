@@ -9,150 +9,135 @@ module Parse
   , parse
   ) where
 
-import Ast
-import Data.Functor (($>))
-import qualified Data.List.NonEmpty as N
-import Data.Void (Void)
-import Text.Megaparsec
-  ( (<|>)
-  , MonadParsec(eof, try, withRecovery)
-  , ParseErrorBundle(bundleErrors, bundlePosState)
-  , Parsec
-  , PosState(pstateSourcePos)
-  , SourcePos
-  , anySingle
-  , getSourcePos
-  , many
-  , noneOf
-  , oneOf
-  , parseErrorTextPretty
-  , runParser
-  , skipMany
-  , some
-  )
-import Text.Megaparsec.Char (char)
+import Ast hiding (getPos)
+import Combinators
+import Control.Arrow ((<<<), Arrow(arr))
+import Control.Monad.Trans.Class (MonadTrans(lift))
+import Control.Monad.Trans.Maybe (MaybeT(MaybeT, runMaybeT))
+import Data.Char (isSpace)
+import Data.List.NonEmpty (NonEmpty((:|)))
+import Parser (Parser)
+import qualified Parser as P
 
 parse :: String -> Ast
-parse = mkTotal AstError parseAst
+parse s = P.parse (ast <<< trees <<< tokens) (0, s)
 
-type Parser = Parsec Void String
+ast :: Parser [Tree] Ast
+ast = arr $ Ast . map (P.parse def)
 
-mkTotal :: (String -> SourcePos -> a) -> Parser a -> String -> a
-mkTotal fromErr parser source = case runParser parser "" source of
-  Left err ->
-    let
-      pos = pstateSourcePos $ bundlePosState err
-      msg = parseErrorTextPretty $ N.head $ bundleErrors err
-    in fromErr msg pos
-  Right ok -> ok
+def :: Parser Tree Def
+def = arr $ \case
+  tree@(ParenBranch pos trees) -> case trees of
+    [l, r] -> Def (P.parse name l) (P.parse term r) pos
+    _ -> DefError $ ExpectedNameTerm tree
+  TreeError e -> DefError e
+  tree -> DefError $ ExpectedDefTree tree
 
-fallback :: (String -> SourcePos -> a) -> Parser a -> Parser a
-fallback fromErr = withRecovery $ \err -> do
-  pos <- getSourcePos
-  anySingle
-  space
-  pure $ fromErr (parseErrorTextPretty err) pos
+term :: Parser Tree Term
+term = arr $ \case
+  tree@(BracketBranch pos trees) -> case reverse trees of
+    [] -> TermError $ ExpectedParamBody tree
+    [_] -> TermError $ ExpectedBody tree
+    body : param : params ->
+      let
+        assoc fun = \case
+          [] -> fun
+          param : params ->
+            assoc (TermFun $ Fun (P.parse name param) fun pos) params
+        body' = P.parse term body
+        param' = P.parse name param
+      in assoc (TermFun $ Fun param' body' pos) params
+  tree@(ParenBranch pos trees) -> case trees of
+    [] -> TermError $ ExpectedTermTerm tree
+    [_] -> TermError $ ExpectedTerm tree
+    l : r : rs ->
+      let
+        assoc app = \case
+          [] -> app
+          l : r -> assoc (App (TermApp app) (P.parse term l) pos) r
+        l' = P.parse term l
+        r' = P.parse term r
+        app = App l' r' pos
+      in TermApp $ assoc app rs
+  leaf@(Leaf pos _) -> TermVar $ Var (P.parse name leaf) pos
+  TreeError e -> TermError e
 
-parseAst :: Parser Ast
-parseAst = do
-  space
-  defs <- many parseDef
-  eof
-  pure $ Ast defs
+name :: Parser Tree Name
+name = arr $ \case
+  Leaf pos s -> case s of
+    '_' :| "" -> Blank pos
+    _ -> Ident s pos
+  TreeError e -> NameError e
+  tree -> NameError $ ExpectedName tree
 
-parseDef :: Parser Def
-parseDef = fallback DefError $ do
-  pos <- getSourcePos
-  openParen
-  name <- parseName
-  term <- parseTerm
-  closeParen
-  pure $ Def name term pos
+--------------------------------------------------------------------------------
 
-parseTerm :: Parser Term
-parseTerm =
-  fallback TermError
-    $ TermFun
-    <$> try parseFun
-    <|> TermApp
-    <$> try parseApp
-    <|> TermVar
-    <$> parseVar
+trees :: Parser [Token] [Tree]
+trees = star $ try tree <<|>> treeError
 
-parseFun :: Parser Fun
-parseFun = do
-  pos <- getSourcePos
-  openBracket
-  Fun l r _ <- parseInnerFun
-  pure $ Fun l r pos
-  where
-    parseInnerFun :: Parser Fun
-    parseInnerFun = do
-      pos <- getSourcePos
-      param <- parseName
-      body <- try parseBody <|> TermFun <$> parseInnerFun
-      pure $ Fun param body pos
+tree :: Parser [Token] (Maybe Tree)
+tree = try parenBranch <<|>> try bracketBranch <<|>> leaf
 
-    parseBody :: Parser Term
-    parseBody = parseTerm <* closeBracket
+parenBranch :: Parser [Token] (Maybe Tree)
+parenBranch = runMaybeT $ do
+  OpenParen pos <- MaybeT takeToken
+  ts <- lift $ star $ try tree
+  close <- lift takeToken
+  pure $ case close of
+    Just CloseParen{} -> ParenBranch pos ts
+    _ -> TreeError $ ExpectedCloseParen pos
 
-parseApp :: Parser App
-parseApp = do
-  pos <- getSourcePos
-  openParen
-  l <- parseTerm
-  r <- parseTerm
-  parseInnerApp $ App l r pos
-  where
-    parseInnerApp :: App -> Parser App
-    parseInnerApp app = try (parseAppTerminal app) <|> parseNestedApp app
+bracketBranch :: Parser [Token] (Maybe Tree)
+bracketBranch = runMaybeT $ do
+  OpenBracket pos <- MaybeT takeToken
+  ts <- lift $ star $ try tree
+  close <- lift takeToken
+  pure $ case close of
+    Just CloseBracket{} -> BracketBranch pos ts
+    _ -> TreeError $ ExpectedCloseBracket pos
 
-    parseAppTerminal :: App -> Parser App
-    parseAppTerminal app = closeParen $> app
+leaf :: Parser [Token] (Maybe Tree)
+leaf = runMaybeT $ do
+  Word pos s <- MaybeT takeToken
+  pure $ Leaf pos s
 
-    parseNestedApp :: App -> Parser App
-    parseNestedApp (App appL appR appPos) = do
-      let l = TermApp $ App appL appR (getPos appL)
-      r <- parseTerm
-      parseInnerApp $ App l r appPos
+treeError :: Parser [Token] (Maybe Tree)
+treeError = runMaybeT $ do
+  t <- MaybeT takeToken
+  pure $ TreeError $ ExpectedDefToken t
 
-parseVar :: Parser Var
-parseVar = do
-  pos <- getSourcePos
-  name <- parseName
-  pure $ Var name pos
+--------------------------------------------------------------------------------
 
-parseName :: Parser Name
-parseName = fallback NameError $ try parseBlank <|> parseIdent
+tokens :: Parser (SourcePos, String) [Token]
+tokens = star token
 
-parseBlank :: Parser Name
-parseBlank = do
-  pos <- getSourcePos
-  char '_'
-  space
-  pure $ Blank pos
+token :: Parser (SourcePos, String) (Maybe Token)
+token =
+  try openParen
+    <<|>> try closeParen
+    <<|>> try openBracket
+    <<|>> try closeBracket
+    <<|>> try word
+    <<|>> skip
 
-parseIdent :: Parser Name
-parseIdent = do
-  pos <- getSourcePos
-  ident <- some ident
-  space
-  pure $ Ident ident pos
+skip :: Parser (SourcePos, String) (Maybe Token)
+skip = runMaybeT $ MaybeT takeToken *> MaybeT token
 
-ident :: Parser Char
-ident = noneOf (['_', '(', ')', '[', ']', ' ', '\t', '\n', '\r'] :: [Char])
+openParen :: Parser (SourcePos, String) (Maybe Token)
+openParen = runMaybeT $ OpenParen <$> lift getPos <* MaybeT (matchM '(')
 
-openParen :: Parser ()
-openParen = char '(' *> space
+closeParen :: Parser (SourcePos, String) (Maybe Token)
+closeParen = runMaybeT $ CloseParen <$> lift getPos <* MaybeT (matchM ')')
 
-closeParen :: Parser ()
-closeParen = char ')' *> space
+openBracket :: Parser (SourcePos, String) (Maybe Token)
+openBracket = runMaybeT $ OpenBracket <$> lift getPos <* MaybeT (matchM '[')
 
-openBracket :: Parser ()
-openBracket = char '[' *> space
+closeBracket :: Parser (SourcePos, String) (Maybe Token)
+closeBracket = runMaybeT $ CloseBracket <$> lift getPos <* MaybeT (matchM ']')
 
-closeBracket :: Parser ()
-closeBracket = char ']' *> space
-
-space :: Parser ()
-space = skipMany $ oneOf ([' ', '\t', '\n', '\r'] :: [Char])
+word :: Parser (SourcePos, String) (Maybe Token)
+word =
+  let isWordChar ch = not (isSpace ch) && notElem ch "()[]"
+  in
+    runMaybeT $ Word <$> lift getPos <*> MaybeT
+      (plus $ try $ satisfyM isWordChar)

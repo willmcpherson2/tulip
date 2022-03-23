@@ -7,8 +7,6 @@ common shared
   default-extensions:
     LambdaCase
     , MultiWayIf
-    , OverloadedStrings
-    , OverloadedLists
     , NamedFieldPuns
   ghc-options:
     -Weverything
@@ -38,4 +36,5 @@ executable tulip
     base
     , extra
     , directory
-    , megaparsec
+    , transformers
+    , parss

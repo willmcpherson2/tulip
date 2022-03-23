@@ -44,4 +44,4 @@ dump s =
     Pipeline { source, ast, term, result } = compile s
     lines =
       ["Source:", source, "\nAst:", ast, "\nTerm:", term, "\nResult:", result]
-  in mapM_ putStrLn (lines :: [String])
+  in mapM_ putStrLn lines

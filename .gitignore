@@ -6,6 +6,7 @@
 !README.md
 !brittany.yaml
 !tulip.cabal
+!cabal.project
 !src
 !src/**
 !examples
