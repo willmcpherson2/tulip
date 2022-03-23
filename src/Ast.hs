@@ -23,7 +23,7 @@ data Ast
   deriving Show
 
 data Def
-  = Def Name Term Pos
+  = Def Pos Name Term
   | DefError Error
   deriving Show
 
@@ -34,17 +34,17 @@ data Term
   | TermError Error
   deriving Show
 
-data Var = Var Name Pos
+data Var = Var Pos Name
   deriving Show
 
-data Fun = Fun Name Term Pos
+data Fun = Fun Pos Name Term
   deriving Show
 
-data App = App Term Term Pos
+data App = App Pos Term Term
   deriving Show
 
 data Name
-  = Ident (NonEmpty Char) Pos
+  = Ident Pos (NonEmpty Char)
   | Blank Pos
   | NameError Error
   deriving Show
@@ -98,7 +98,7 @@ class GetPos a where
 
 instance GetPos Def where
   getPos = \case
-    Def _ _ pos -> pos
+    Def pos _ _ -> pos
     DefError e -> getPos e
 
 instance GetPos Term where
@@ -109,17 +109,17 @@ instance GetPos Term where
     TermError e -> getPos e
 
 instance GetPos Fun where
-  getPos (Fun _ _ pos) = pos
+  getPos (Fun pos _ _) = pos
 
 instance GetPos App where
-  getPos (App _ _ pos) = pos
+  getPos (App pos _ _) = pos
 
 instance GetPos Var where
-  getPos (Var _ pos) = pos
+  getPos (Var pos _) = pos
 
 instance GetPos Name where
   getPos = \case
-    Ident _ pos -> pos
+    Ident pos _ -> pos
     Blank pos -> pos
     NameError e -> getPos e
 
@@ -167,7 +167,7 @@ instance Display Ast where
 
 instance Display Def where
   display = \case
-    Def name term _ -> "(" ++ display name ++ " " ++ display term ++ ")"
+    Def _ name term -> "(" ++ display name ++ " " ++ display term ++ ")"
     DefError e -> display e
 
 instance Display Term where
@@ -178,18 +178,18 @@ instance Display Term where
     TermError e -> display e
 
 instance Display Fun where
-  display (Fun param body _) =
+  display (Fun _ param body) =
     "[" ++ display param ++ " " ++ display body ++ "]"
 
 instance Display App where
-  display (App l r _) = "(" ++ display l ++ " " ++ display r ++ ")"
+  display (App _ l r) = "(" ++ display l ++ " " ++ display r ++ ")"
 
 instance Display Var where
-  display (Var name _) = display name
+  display (Var _ name) = display name
 
 instance Display Name where
   display = \case
-    Ident s _ -> toList s
+    Ident _ s -> toList s
     Blank{} -> "_"
     NameError e -> display e
 

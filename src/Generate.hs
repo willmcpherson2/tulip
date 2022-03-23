@@ -16,18 +16,18 @@ inline ident defs = inlineTerm defs <$> resolve ident (reverse defs)
 
 resolve :: NonEmpty Char -> [Def] -> Maybe Term
 resolve ident = firstJust $ \case
-  Def (Ident defIdent _) term _ ->
+  Def _ (Ident _ defIdent) term ->
     if ident == defIdent then Just term else Nothing
   _ -> Nothing
 
 inlineTerm :: [Def] -> Term -> Term
 inlineTerm defs = \case
-  TermFun (Fun param body pos) ->
-    TermFun $ Fun param (inlineTerm defs body) pos
-  TermApp (App l r pos) ->
-    TermApp $ App (inlineTerm defs l) (inlineTerm defs r) pos
-  var@(TermVar (Var name _)) -> case name of
-    Ident ident _ -> fromMaybe var (inline ident defs)
+  TermFun (Fun pos param body) ->
+    TermFun $ Fun pos param (inlineTerm defs body)
+  TermApp (App pos l r) ->
+    TermApp $ App pos (inlineTerm defs l) (inlineTerm defs r)
+  var@(TermVar (Var _ name)) -> case name of
+    Ident _ ident -> fromMaybe var (inline ident defs)
     Blank{} -> var
     NameError e -> TermError e
   err@TermError{} -> err

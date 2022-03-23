@@ -28,7 +28,7 @@ ast = arr $ Ast . map (P.parse def)
 def :: Parser Tree Def
 def = arr $ \case
   tree@(ParenBranch pos trees) -> case trees of
-    [l, r] -> Def (P.parse name l) (P.parse term r) pos
+    [l, r] -> Def pos (P.parse name l) (P.parse term r)
     _ -> DefError $ ExpectedNameTerm tree
   TreeError e -> DefError e
   tree -> DefError $ ExpectedDefTree tree
@@ -43,10 +43,10 @@ term = arr $ \case
         assoc fun = \case
           [] -> fun
           param : params ->
-            assoc (TermFun $ Fun (P.parse name param) fun pos) params
+            assoc (TermFun $ Fun pos (P.parse name param) fun) params
         body' = P.parse term body
         param' = P.parse name param
-      in assoc (TermFun $ Fun param' body' pos) params
+      in assoc (TermFun $ Fun pos param' body') params
   tree@(ParenBranch pos trees) -> case trees of
     [] -> TermError $ ExpectedTermTerm tree
     [_] -> TermError $ ExpectedTerm tree
@@ -54,19 +54,19 @@ term = arr $ \case
       let
         assoc app = \case
           [] -> app
-          l : r -> assoc (App (TermApp app) (P.parse term l) pos) r
+          l : r -> assoc (App pos (TermApp app) (P.parse term l)) r
         l' = P.parse term l
         r' = P.parse term r
-        app = App l' r' pos
+        app = App pos l' r'
       in TermApp $ assoc app rs
-  leaf@(Leaf pos _) -> TermVar $ Var (P.parse name leaf) pos
+  leaf@(Leaf pos _) -> TermVar $ Var pos (P.parse name leaf)
   TreeError e -> TermError e
 
 name :: Parser Tree Name
 name = arr $ \case
   Leaf pos s -> case s of
     '_' :| "" -> Blank pos
-    _ -> Ident s pos
+    _ -> Ident pos s
   TreeError e -> NameError e
   tree -> NameError $ ExpectedName tree
 
