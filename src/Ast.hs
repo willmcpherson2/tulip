@@ -1,5 +1,5 @@
 module Ast
-  ( SourcePos
+  ( Pos
   , Ast(..)
   , Def(..)
   , Term(..)
@@ -23,7 +23,7 @@ data Ast
   deriving Show
 
 data Def
-  = Def Name Term SourcePos
+  = Def Name Term Pos
   | DefError Error
   deriving Show
 
@@ -34,46 +34,46 @@ data Term
   | TermError Error
   deriving Show
 
-data Var = Var Name SourcePos
+data Var = Var Name Pos
   deriving Show
 
-data Fun = Fun Name Term SourcePos
+data Fun = Fun Name Term Pos
   deriving Show
 
-data App = App Term Term SourcePos
+data App = App Term Term Pos
   deriving Show
 
 data Name
-  = Ident (NonEmpty Char) SourcePos
-  | Blank SourcePos
+  = Ident (NonEmpty Char) Pos
+  | Blank Pos
   | NameError Error
   deriving Show
 
 --------------------------------------------------------------------------------
 
 data Tree
-  = ParenBranch SourcePos [Tree]
-  | BracketBranch SourcePos [Tree]
-  | Leaf SourcePos (NonEmpty Char)
+  = ParenBranch Pos [Tree]
+  | BracketBranch Pos [Tree]
+  | Leaf Pos (NonEmpty Char)
   | TreeError Error
   deriving Show
 
 --------------------------------------------------------------------------------
 
 data Token
-  = OpenParen SourcePos
-  | CloseParen SourcePos
-  | OpenBracket SourcePos
-  | CloseBracket SourcePos
-  | Word SourcePos (NonEmpty Char)
+  = OpenParen Pos
+  | CloseParen Pos
+  | OpenBracket Pos
+  | CloseBracket Pos
+  | Word Pos (NonEmpty Char)
   deriving Show
 
 --------------------------------------------------------------------------------
 
 data Error
   = ExpectedDefToken Token
-  | ExpectedCloseBracket SourcePos
-  | ExpectedCloseParen SourcePos
+  | ExpectedCloseBracket Pos
+  | ExpectedCloseParen Pos
   | ExpectedDefTree Tree
   | ExpectedNameTerm Tree
   | ExpectedName Tree
@@ -81,20 +81,20 @@ data Error
   | ExpectedBody Tree
   | ExpectedTermTerm Tree
   | ExpectedTerm Tree
-  | MainNotFound SourcePos
-  | EvaluatedHole SourcePos
-  | ApplicationOnSymbol SourcePos (NonEmpty Char)
-  | ApplicationOnHole SourcePos
+  | MainNotFound Pos
+  | EvaluatedHole Pos
+  | ApplicationOnSymbol Pos (NonEmpty Char)
+  | ApplicationOnHole Pos
   deriving Show
 
 --------------------------------------------------------------------------------
 
-type SourcePos = Int
+type Pos = Int
 
 --------------------------------------------------------------------------------
 
 class GetPos a where
-  getPos :: a -> SourcePos
+  getPos :: a -> Pos
 
 instance GetPos Def where
   getPos = \case

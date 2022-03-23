@@ -108,10 +108,10 @@ treeError = runMaybeT $ do
 
 --------------------------------------------------------------------------------
 
-tokens :: Parser (SourcePos, String) [Token]
+tokens :: Parser (Pos, String) [Token]
 tokens = star token
 
-token :: Parser (SourcePos, String) (Maybe Token)
+token :: Parser (Pos, String) (Maybe Token)
 token =
   try openParen
     <<|>> try closeParen
@@ -120,22 +120,22 @@ token =
     <<|>> try word
     <<|>> skip
 
-skip :: Parser (SourcePos, String) (Maybe Token)
+skip :: Parser (Pos, String) (Maybe Token)
 skip = runMaybeT $ MaybeT takeToken *> MaybeT token
 
-openParen :: Parser (SourcePos, String) (Maybe Token)
+openParen :: Parser (Pos, String) (Maybe Token)
 openParen = runMaybeT $ OpenParen <$> lift getPos <* MaybeT (matchM '(')
 
-closeParen :: Parser (SourcePos, String) (Maybe Token)
+closeParen :: Parser (Pos, String) (Maybe Token)
 closeParen = runMaybeT $ CloseParen <$> lift getPos <* MaybeT (matchM ')')
 
-openBracket :: Parser (SourcePos, String) (Maybe Token)
+openBracket :: Parser (Pos, String) (Maybe Token)
 openBracket = runMaybeT $ OpenBracket <$> lift getPos <* MaybeT (matchM '[')
 
-closeBracket :: Parser (SourcePos, String) (Maybe Token)
+closeBracket :: Parser (Pos, String) (Maybe Token)
 closeBracket = runMaybeT $ CloseBracket <$> lift getPos <* MaybeT (matchM ']')
 
-word :: Parser (SourcePos, String) (Maybe Token)
+word :: Parser (Pos, String) (Maybe Token)
 word =
   let isWordChar ch = not (isSpace ch) && notElem ch "()[]"
   in
