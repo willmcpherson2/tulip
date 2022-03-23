@@ -1,13 +1,4 @@
-module Parse
-  ( Ast(..)
-  , Def(..)
-  , Term(..)
-  , Var(..)
-  , Fun(..)
-  , App(..)
-  , Name(..)
-  , parse
-  ) where
+module Parse (Ast(..), Def(..), Term(..), Name(..), parse) where
 
 import Ast hiding (getPos)
 import Combinators
@@ -42,11 +33,10 @@ term = arr $ \case
       let
         assoc fun = \case
           [] -> fun
-          param : params ->
-            assoc (TermFun $ Fun pos (P.parse name param) fun) params
+          param : params -> assoc (Fun pos (P.parse name param) fun) params
         body' = P.parse term body
         param' = P.parse name param
-      in assoc (TermFun $ Fun pos param' body') params
+      in assoc (Fun pos param' body') params
   tree@(ParenBranch pos trees) -> case trees of
     [] -> TermError $ ExpectedTermTerm tree
     [_] -> TermError $ ExpectedTerm tree
@@ -54,12 +44,12 @@ term = arr $ \case
       let
         assoc app = \case
           [] -> app
-          l : r -> assoc (App pos (TermApp app) (P.parse term l)) r
+          l : r -> assoc (App pos app (P.parse term l)) r
         l' = P.parse term l
         r' = P.parse term r
         app = App pos l' r'
-      in TermApp $ assoc app rs
-  leaf@(Leaf pos _) -> TermVar $ Var pos (P.parse name leaf)
+      in assoc app rs
+  leaf@(Leaf pos _) -> Var pos (P.parse name leaf)
   TreeError e -> TermError e
 
 name :: Parser Tree Name

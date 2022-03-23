@@ -20,11 +20,9 @@ resolve ident = firstJust $ \case
 
 inlineTerm :: [Def] -> Term -> Term
 inlineTerm defs = \case
-  TermFun (Fun pos param body) ->
-    TermFun $ Fun pos param (inlineTerm defs body)
-  TermApp (App pos l r) ->
-    TermApp $ App pos (inlineTerm defs l) (inlineTerm defs r)
-  var@(TermVar (Var _ name)) -> case name of
+  Fun pos param body -> Fun pos param (inlineTerm defs body)
+  App pos l r -> App pos (inlineTerm defs l) (inlineTerm defs r)
+  var@(Var _ name) -> case name of
     Ident _ ident -> fromMaybe var (inline ident defs)
     Blank{} -> var
     NameError e -> TermError e

@@ -3,9 +3,6 @@ module Ast
   , Ast(..)
   , Def(..)
   , Term(..)
-  , Var(..)
-  , Fun(..)
-  , App(..)
   , Name(..)
   , Token(..)
   , Tree(..)
@@ -26,19 +23,10 @@ data Def
   deriving Show
 
 data Term
-  = TermFun Fun
-  | TermApp App
-  | TermVar Var
+  = Fun Pos Name Term
+  | App Pos Term Term
+  | Var Pos Name
   | TermError Error
-  deriving Show
-
-data Var = Var Pos Name
-  deriving Show
-
-data Fun = Fun Pos Name Term
-  deriving Show
-
-data App = App Pos Term Term
   deriving Show
 
 data Name
@@ -101,19 +89,10 @@ instance GetPos Def where
 
 instance GetPos Term where
   getPos = \case
-    TermFun fun -> getPos fun
-    TermApp app -> getPos app
-    TermVar var -> getPos var
+    Fun pos _ _ -> pos
+    App pos _ _ -> pos
+    Var pos _ -> pos
     TermError e -> getPos e
-
-instance GetPos Fun where
-  getPos (Fun pos _ _) = pos
-
-instance GetPos App where
-  getPos (App pos _ _) = pos
-
-instance GetPos Var where
-  getPos (Var pos _) = pos
 
 instance GetPos Name where
   getPos = \case
@@ -168,20 +147,10 @@ instance Display Def where
 
 instance Display Term where
   display = \case
-    TermFun fun -> display fun
-    TermApp app -> display app
-    TermVar var -> display var
+    Fun _ param body -> "[" ++ display param ++ " " ++ display body ++ "]"
+    App _ l r -> "(" ++ display l ++ " " ++ display r ++ ")"
+    Var _ name -> display name
     TermError e -> display e
-
-instance Display Fun where
-  display (Fun _ param body) =
-    "[" ++ display param ++ " " ++ display body ++ "]"
-
-instance Display App where
-  display (App _ l r) = "(" ++ display l ++ " " ++ display r ++ ")"
-
-instance Display Var where
-  display (Var _ name) = display name
 
 instance Display Name where
   display = \case
