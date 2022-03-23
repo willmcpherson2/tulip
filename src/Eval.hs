@@ -7,15 +7,15 @@ import Parse
 eval :: Term -> Term
 eval = \case
   fun@Fun{} -> fun
-  App pos l r -> evalApp pos l r
+  App pos l r -> apply pos l r
   var@(Var _ name) -> case name of
     Ident{} -> var
     Blank blankPos -> TermError $ EvaluatedHole blankPos
     NameError e -> TermError e
   err@TermError{} -> err
 
-evalApp :: Pos -> Term -> Term -> Term
-evalApp pos l r = case l of
+apply :: Pos -> Term -> Term -> Term
+apply pos l r = case l of
   Fun _ param body -> case param of
     Ident _ param -> eval $ replace param body r
     Blank{} -> eval body
