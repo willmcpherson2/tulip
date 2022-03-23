@@ -6,10 +6,8 @@ import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Maybe (fromMaybe)
 
 generate :: Ast -> Term
-generate = \case
-  Ast defs ->
-    fromMaybe (TermError $ MainNotFound 0) (inline ('m' :| "ain") defs)
-  AstError e -> TermError e
+generate (Ast defs) =
+  fromMaybe (TermError $ MainNotFound 0) (inline ('m' :| "ain") defs)
 
 inline :: NonEmpty Char -> [Def] -> Maybe Term
 inline ident defs = inlineTerm defs <$> resolve ident (reverse defs)

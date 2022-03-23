@@ -17,9 +17,7 @@ module Ast
 import Data.List (intercalate)
 import Data.List.NonEmpty (NonEmpty, toList)
 
-data Ast
-  = Ast [Def]
-  | AstError Error
+newtype Ast = Ast [Def]
   deriving Show
 
 data Def
@@ -161,9 +159,7 @@ class Display a where
   display :: a -> String
 
 instance Display Ast where
-  display = \case
-    Ast defs -> intercalate "\n" (map display defs)
-    AstError e -> display e
+  display (Ast defs) = intercalate "\n" (map display defs)
 
 instance Display Def where
   display = \case
