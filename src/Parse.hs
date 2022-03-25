@@ -1,7 +1,8 @@
 module Parse (Ast(..), Def(..), Term(..), Name(..), parse) where
 
-import Ast hiding (getPos)
-import Combinators
+import Ast
+import Combinators hiding (getPos)
+import qualified Combinators as C
 import Control.Arrow ((<<<), Arrow(arr))
 import Control.Monad.Trans.Class (MonadTrans(lift))
 import Control.Monad.Trans.Maybe (MaybeT(MaybeT, runMaybeT))
@@ -26,29 +27,25 @@ def = arr $ \case
 
 term :: Parser Tree Term
 term = arr $ \case
-  tree@(BracketBranch pos trees) -> case reverse trees of
+  tree@(BracketBranch pos trees) -> case trees of
     [] -> TermError $ ExpectedParamBody tree
     [_] -> TermError $ ExpectedBody tree
-    body : param : params ->
+    param : tree : trees ->
       let
-        assoc fun = \case
-          [] -> fun
-          param : params -> assoc (Fun pos (P.parse name param) fun) params
-        body' = P.parse term body
-        param' = P.parse name param
-      in assoc (Fun pos param' body') params
+        assoc = \case
+          body :| [] -> P.parse term body
+          param :| tree : trees ->
+            Fun (getPos param) (P.parse name param) (assoc $ tree :| trees)
+      in Fun pos (P.parse name param) (assoc $ tree :| trees)
   tree@(ParenBranch pos trees) -> case trees of
     [] -> TermError $ ExpectedTermTerm tree
     [_] -> TermError $ ExpectedTerm tree
-    l : r : rs ->
+    l : r : trees ->
       let
         assoc app = \case
           [] -> app
-          l : r -> assoc (App pos app (P.parse term l)) r
-        l' = P.parse term l
-        r' = P.parse term r
-        app = App pos l' r'
-      in assoc app rs
+          r : trees -> assoc (App pos app (P.parse term r)) trees
+      in assoc (App pos (P.parse term l) (P.parse term r)) trees
   leaf@(Leaf pos _) -> Var pos (P.parse name leaf)
   TreeError e -> TermError e
 
@@ -114,20 +111,21 @@ skip :: Parser (Pos, String) (Maybe Token)
 skip = runMaybeT $ MaybeT takeToken *> MaybeT token
 
 openParen :: Parser (Pos, String) (Maybe Token)
-openParen = runMaybeT $ OpenParen <$> lift getPos <* MaybeT (matchM '(')
+openParen = runMaybeT $ OpenParen <$> lift C.getPos <* MaybeT (matchM '(')
 
 closeParen :: Parser (Pos, String) (Maybe Token)
-closeParen = runMaybeT $ CloseParen <$> lift getPos <* MaybeT (matchM ')')
+closeParen = runMaybeT $ CloseParen <$> lift C.getPos <* MaybeT (matchM ')')
 
 openBracket :: Parser (Pos, String) (Maybe Token)
-openBracket = runMaybeT $ OpenBracket <$> lift getPos <* MaybeT (matchM '[')
+openBracket = runMaybeT $ OpenBracket <$> lift C.getPos <* MaybeT (matchM '[')
 
 closeBracket :: Parser (Pos, String) (Maybe Token)
-closeBracket = runMaybeT $ CloseBracket <$> lift getPos <* MaybeT (matchM ']')
+closeBracket =
+  runMaybeT $ CloseBracket <$> lift C.getPos <* MaybeT (matchM ']')
 
 word :: Parser (Pos, String) (Maybe Token)
 word =
   let isWordChar ch = not (isSpace ch) && notElem ch "()[]"
   in
-    runMaybeT $ Word <$> lift getPos <*> MaybeT
+    runMaybeT $ Word <$> lift C.getPos <*> MaybeT
       (plus $ try $ satisfyM isWordChar)
