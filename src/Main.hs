@@ -1,6 +1,6 @@
 module Main (Pipeline(..), main, compile, dump) where
 
-import Ast (Display(display))
+import Ast (Ast, Display(display), Term)
 import Eval (eval)
 import Generate (generate)
 import Parse (parse)
@@ -9,9 +9,9 @@ import System.Environment (getArgs)
 
 data Pipeline = Pipeline
   { source :: String
-  , ast :: String
-  , term :: String
-  , result :: String
+  , ast :: Ast
+  , term :: Term
+  , result :: Term
   }
   deriving Show
 
@@ -21,7 +21,7 @@ main = getArgs >>= \case
     doesFileExist filename >>= \case
       True -> do
         source <- readFile filename
-        putStrLn $ result $ compile source
+        putStrLn $ display $ result $ compile source
       False -> putStrLn "no such file exists"
   _ -> putStrLn "please supply a file"
 
@@ -31,17 +31,23 @@ compile source =
     ast = parse source
     term = generate ast
     result = eval term
-  in Pipeline
-    { source
-    , ast = display ast
-    , term = display term
-    , result = display result
-    }
+  in Pipeline { source, ast, term, result }
 
 dump :: String -> IO ()
 dump s =
   let
     Pipeline { source, ast, term, result } = compile s
     lines =
-      ["Source:", source, "\nAst:", ast, "\nTerm:", term, "\nResult:", result]
-  in mapM_ putStrLn lines
+      [ "Source:"
+      , source
+      , ""
+      , "Ast:"
+      , display ast
+      , ""
+      , "Term:"
+      , display term
+      , ""
+      , "Result:"
+      , display result
+      ]
+  in putStr $ unlines lines
