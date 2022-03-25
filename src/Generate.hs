@@ -7,7 +7,7 @@ import Data.Maybe (fromMaybe)
 
 generate :: Ast -> Term
 generate (Ast defs) =
-  fromMaybe (TermError $ MainNotFound 0) (inline ('m' :| "ain") defs)
+  fromMaybe (TermError $ MainNotFound (0, Nothing)) (inline ('m' :| "ain") defs)
 
 inline :: NonEmpty Char -> [Def] -> Maybe Term
 inline ident defs = inlineTerm defs <$> resolve ident (reverse defs)
@@ -20,8 +20,8 @@ resolve ident = firstJust $ \case
 
 inlineTerm :: [Def] -> Term -> Term
 inlineTerm defs = \case
-  Fun pos param body -> Fun pos param (inlineTerm defs body)
-  App pos l r -> App pos (inlineTerm defs l) (inlineTerm defs r)
+  Fun span param body -> Fun span param (inlineTerm defs body)
+  App span l r -> App span (inlineTerm defs l) (inlineTerm defs r)
   var@(Var _ name) -> case name of
     Ident _ ident -> fromMaybe var (inline ident defs)
     Blank{} -> var

@@ -1,5 +1,6 @@
 module Ast
   ( Pos
+  , Span
   , Ast(..)
   , Def(..)
   , Term(..)
@@ -7,7 +8,7 @@ module Ast
   , Token(..)
   , Tree(..)
   , Error(..)
-  , GetPos(..)
+  , GetSpan(..)
   , Display(..)
   ) where
 
@@ -18,48 +19,48 @@ newtype Ast = Ast [Def]
   deriving Show
 
 data Def
-  = Def Pos Name Term
+  = Def Span Name Term
   | DefError Error
   deriving Show
 
 data Term
-  = Fun Pos Name Term
-  | App Pos Term Term
-  | Var Pos Name
+  = Fun Span Name Term
+  | App Span Term Term
+  | Var Span Name
   | TermError Error
   deriving Show
 
 data Name
-  = Ident Pos (NonEmpty Char)
-  | Blank Pos
+  = Ident Span (NonEmpty Char)
+  | Blank Span
   | NameError Error
   deriving Show
 
 --------------------------------------------------------------------------------
 
 data Tree
-  = ParenBranch Pos [Tree]
-  | BracketBranch Pos [Tree]
-  | Leaf Pos (NonEmpty Char)
+  = ParenBranch Span [Tree]
+  | BracketBranch Span [Tree]
+  | Leaf Span (NonEmpty Char)
   | TreeError Error
   deriving Show
 
 --------------------------------------------------------------------------------
 
 data Token
-  = OpenParen Pos
-  | CloseParen Pos
-  | OpenBracket Pos
-  | CloseBracket Pos
-  | Word Pos (NonEmpty Char)
+  = OpenParen Span
+  | CloseParen Span
+  | OpenBracket Span
+  | CloseBracket Span
+  | Word Span (NonEmpty Char)
   deriving Show
 
 --------------------------------------------------------------------------------
 
 data Error
   = ExpectedDefToken Token
-  | ExpectedCloseBracket Pos
-  | ExpectedCloseParen Pos
+  | ExpectedCloseBracket Span
+  | ExpectedCloseParen Span
   | ExpectedDefTree Tree
   | ExpectedNameTerm Tree
   | ExpectedName Tree
@@ -67,70 +68,78 @@ data Error
   | ExpectedBody Tree
   | ExpectedTermTerm Tree
   | ExpectedTerm Tree
-  | MainNotFound Pos
-  | EvaluatedHole Pos
-  | ApplicationOnSymbol Pos (NonEmpty Char)
-  | ApplicationOnHole Pos
+  | MainNotFound Span
+  | EvaluatedHole Span
+  | ApplicationOnSymbol Span (NonEmpty Char)
+  | ApplicationOnHole Span
   deriving Show
 
 --------------------------------------------------------------------------------
 
 type Pos = Int
 
+type Span = (Pos, Maybe Pos)
+
 --------------------------------------------------------------------------------
 
-class GetPos a where
-  getPos :: a -> Pos
+class GetSpan a where
+  getSpan :: a -> Span
 
-instance GetPos Def where
-  getPos = \case
-    Def pos _ _ -> pos
-    DefError e -> getPos e
+  getStart :: a -> Pos
+  getStart = fst . getSpan
 
-instance GetPos Term where
-  getPos = \case
-    Fun pos _ _ -> pos
-    App pos _ _ -> pos
-    Var pos _ -> pos
-    TermError e -> getPos e
+  getEnd :: a -> Maybe Pos
+  getEnd = snd . getSpan
 
-instance GetPos Name where
-  getPos = \case
-    Ident pos _ -> pos
-    Blank pos -> pos
-    NameError e -> getPos e
+instance GetSpan Def where
+  getSpan = \case
+    Def span _ _ -> span
+    DefError e -> getSpan e
 
-instance GetPos Tree where
-  getPos = \case
-    ParenBranch pos _ -> pos
-    BracketBranch pos _ -> pos
-    Leaf pos _ -> pos
-    TreeError e -> getPos e
+instance GetSpan Term where
+  getSpan = \case
+    Fun span _ _ -> span
+    App span _ _ -> span
+    Var span _ -> span
+    TermError e -> getSpan e
 
-instance GetPos Token where
-  getPos = \case
-    OpenParen pos -> pos
-    CloseParen pos -> pos
-    OpenBracket pos -> pos
-    CloseBracket pos -> pos
-    Word pos _ -> pos
+instance GetSpan Name where
+  getSpan = \case
+    Ident span _ -> span
+    Blank span -> span
+    NameError e -> getSpan e
 
-instance GetPos Error where
-  getPos = \case
-    ExpectedDefToken t -> getPos t
-    ExpectedCloseBracket pos -> pos
-    ExpectedCloseParen pos -> pos
-    ExpectedDefTree tree -> getPos tree
-    ExpectedNameTerm tree -> getPos tree
-    ExpectedName tree -> getPos tree
-    ExpectedParamBody tree -> getPos tree
-    ExpectedBody tree -> getPos tree
-    ExpectedTermTerm tree -> getPos tree
-    ExpectedTerm tree -> getPos tree
-    MainNotFound pos -> pos
-    EvaluatedHole pos -> pos
-    ApplicationOnSymbol pos _ -> pos
-    ApplicationOnHole pos -> pos
+instance GetSpan Tree where
+  getSpan = \case
+    ParenBranch span _ -> span
+    BracketBranch span _ -> span
+    Leaf span _ -> span
+    TreeError e -> getSpan e
+
+instance GetSpan Token where
+  getSpan = \case
+    OpenParen span -> span
+    CloseParen span -> span
+    OpenBracket span -> span
+    CloseBracket span -> span
+    Word span _ -> span
+
+instance GetSpan Error where
+  getSpan = \case
+    ExpectedDefToken t -> getSpan t
+    ExpectedCloseBracket span -> span
+    ExpectedCloseParen span -> span
+    ExpectedDefTree tree -> getSpan tree
+    ExpectedNameTerm tree -> getSpan tree
+    ExpectedName tree -> getSpan tree
+    ExpectedParamBody tree -> getSpan tree
+    ExpectedBody tree -> getSpan tree
+    ExpectedTermTerm tree -> getSpan tree
+    ExpectedTerm tree -> getSpan tree
+    MainNotFound span -> span
+    EvaluatedHole span -> span
+    ApplicationOnSymbol span _ -> span
+    ApplicationOnHole span -> span
 
 --------------------------------------------------------------------------------
 
