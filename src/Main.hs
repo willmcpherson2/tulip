@@ -23,7 +23,10 @@ main = getArgs >>= \case
     doesFileExist filename >>= \case
       True -> do
         source <- readFile filename
-        putStrLn $ display $ result $ compile source
+        let pipeline = compile source
+        case messages pipeline of
+          [] -> putStrLn $ display $ result pipeline
+          ms -> putStrLn $ display ms
       False -> putStrLn "no such file exists"
   _ -> putStrLn "please supply a file"
 
