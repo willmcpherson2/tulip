@@ -32,9 +32,11 @@ executable tulip
     , Generate
     , Eval
     , Ast
+    , Report
   build-depends:
     base
     , extra
+    , split
     , directory
     , transformers
     , parss

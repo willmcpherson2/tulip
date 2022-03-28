@@ -4,12 +4,14 @@ import Ast (Ast, Display(display), Term)
 import Eval (eval)
 import Generate (generate)
 import Parse (parse)
+import Report (Message, Report(report), getMessages)
 import System.Directory (doesFileExist)
 import System.Environment (getArgs)
 
 data Pipeline = Pipeline
   { source :: String
   , ast :: Ast
+  , messages :: [Message]
   , term :: Term
   , result :: Term
   }
@@ -29,20 +31,24 @@ compile :: String -> Pipeline
 compile source =
   let
     ast = parse source
+    messages = getMessages source (report ast)
     term = generate ast
     result = eval term
-  in Pipeline { source, ast, term, result }
+  in Pipeline { source, ast, messages, term, result }
 
 dump :: String -> IO ()
 dump s =
   let
-    Pipeline { source, ast, term, result } = compile s
+    Pipeline { source, ast, messages, term, result } = compile s
     lines =
       [ "Source:"
       , source
       , ""
       , "Ast:"
       , display ast
+      , ""
+      , "Errors:"
+      , display messages
       , ""
       , "Term:"
       , display term
