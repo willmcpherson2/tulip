@@ -4,7 +4,8 @@ module Report (Report(..), Message(..), getMessages) where
 
 import Ast hiding (Token)
 import Data.List (intercalate)
-import Data.List.Split (splitWhen)
+import Data.List.Extra (firstJust)
+import Data.Maybe (fromJust)
 import Prelude hiding (error, lines)
 
 class Report a where
@@ -33,31 +34,41 @@ instance Report Name where
 --------------------------------------------------------------------------------
 
 data Message = Message
-  { lines :: [(String, Pos, Pos)]
+  { startLine :: Pos
+  , startColumn :: Pos
+  , endLine :: Pos
+  , endColumn :: Pos
+  , text :: String
   , error :: Error
-  , line :: Pos
-  , column :: Pos
   }
   deriving Show
 
 instance Display Message where
-  display Message { lines, error, line, column } = intercalate
-    "\n"
-    [displayLocation line column, displayLines lines, display error]
+  display Message { startLine, startColumn, endLine, endColumn, error, text } =
+    intercalate
+      "\n"
+      [ displaySpan startLine startColumn endLine endColumn
+      , display error
+      , ""
+      , pointAt startColumn
+      , text
+      ]
 
 instance Display [Message] where
   display = intercalate "\n\n" . map display
 
-displayLines :: [(String, Pos, Pos)] -> String
-displayLines =
-  concatMap $ \(s, start, end) -> s ++ "\n" ++ displayUnderline start end
+displaySpan :: Pos -> Pos -> Pos -> Pos -> String
+displaySpan startLine startColumn endLine endColumn =
+  "error at "
+    ++ displayPos startLine startColumn
+    ++ "-"
+    ++ displayPos endLine endColumn
 
-displayLocation :: Pos -> Pos -> [Char]
-displayLocation line column = "error at " ++ show line ++ ":" ++ show column
+displayPos :: Pos -> Pos -> [Char]
+displayPos line column = show line ++ ":" ++ show column
 
-displayUnderline :: Pos -> Pos -> String
-displayUnderline start end =
-  replicate start ' ' ++ replicate (end - start + 1) '^'
+pointAt :: Pos -> String
+pointAt pos = replicate pos ' ' ++ "↓"
 
 --------------------------------------------------------------------------------
 
@@ -76,48 +87,33 @@ getMessages source = map (getMessage source)
 getMessage :: String -> Error -> Message
 getMessage source error =
   let
-    errorSpan = getSpan error
+    span = getSpan error
     charInfos = getCharInfos source
-    charInfoLines = getCharInfoLines charInfos
-    errorLines = getErrorLines errorSpan charInfoLines
-    lines = getErrorLinesWithSpans errorSpan errorLines
-    (line, column) = errorIsAt errorSpan errorLines
-  in Message { lines, error, line, column }
+    (start, end) = spanToInfoSpan span charInfos
+    text = getLinesOf (infoLine start) (infoLine end) charInfos
+  in Message
+    { startLine = infoLine start
+    , startColumn = infoColumn start
+    , endLine = infoLine end
+    , endColumn = infoColumn end
+    , error
+    , text
+    }
 
-errorIsAt :: Span -> [[CharInfo]] -> (Pos, Pos)
-errorIsAt (start, _) charInfos =
-  let
-    flat = concat charInfos
-    infos = map snd flat
-    line = head $ map infoLine infos
-    pos = head $ map infoPos infos
-    column = start - pos
-  in (line, column)
+getLinesOf :: Pos -> Pos -> [CharInfo] -> String
+getLinesOf start end = map fst
+  . filter (\(_, Info { infoLine }) -> infoLine >= start && infoLine <= end)
 
-getErrorLinesWithSpans :: Span -> [[CharInfo]] -> [(String, Pos, Pos)]
-getErrorLinesWithSpans (start, end) = map go
-  where
-    go :: [CharInfo] -> (String, Pos, Pos)
-    go charInfos =
-      let
-        line = map fst charInfos
-        Info { infoPos = linePos } = head $ map snd charInfos
-        errorStart = start - linePos
-        errorEnd = maybe (length charInfos) (\end -> end - linePos) end
-      in (line, errorStart, errorEnd)
+spanToInfoSpan :: Span -> [CharInfo] -> (Info, Info)
+spanToInfoSpan (start, end) charInfos =
+  (posToInfo (Just start) charInfos, posToInfo end charInfos)
 
-getErrorLines :: Span -> [[CharInfo]] -> [[CharInfo]]
-getErrorLines (start, end) = filter go
-  where
-    go :: [CharInfo] -> Bool
-    go =
-      any $ \(_, Info { infoPos }) ->
-        infoPos >= start && maybe True (infoPos <=) end
-
-getCharInfoLines :: [CharInfo] -> [[CharInfo]]
-getCharInfoLines = splitWhen $ \case
-  ('\n', _) -> True
-  _ -> False
+posToInfo :: Maybe Pos -> [CharInfo] -> Info
+posToInfo pos charInfos = case pos of
+  Just pos -> fromJust $ firstJust
+    (\(_, info) -> if infoPos info == pos then Just info else Nothing)
+    charInfos
+  Nothing -> snd $ last charInfos
 
 -- FIXME non-unix lines
 
