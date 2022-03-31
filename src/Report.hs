@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleInstances #-}
-
 module Report (Report(..), Message(..), getMessages) where
 
 import Ast hiding (Token)
