@@ -1,14 +1,14 @@
-module Parse (Ast(..), Def(..), Term(..), Name(..), parse) where
+module Parse (Ast (..), Def (..), Term (..), Name (..), parse) where
 
 import Ast
 import Combinators
-import Control.Arrow ((<<<), Arrow(arr))
-import Control.Monad.Trans.Class (MonadTrans(lift))
-import Control.Monad.Trans.Maybe (MaybeT(MaybeT, runMaybeT))
+import Control.Arrow (Arrow (arr), (<<<))
+import Control.Monad.Trans.Class (MonadTrans (lift))
+import Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
 import Data.Char (isSpace)
-import Data.List.NonEmpty (NonEmpty((:|)))
+import Data.List.NonEmpty (NonEmpty ((:|)))
 import Parser (Parser)
-import qualified Parser as P
+import Parser qualified as P
 
 parse :: String -> Ast
 parse s = P.parse (ast <<< trees <<< tokens) (0, s)
@@ -30,26 +30,23 @@ term = arr $ \case
     [] -> TermError $ ExpectedParamBody tree
     [_] -> TermError $ ExpectedBody tree
     param : tree : trees ->
-      let
-        assoc = \case
-          body :| [] -> P.parse term body
-          param :| tree : trees ->
-            let body = assoc $ tree :| trees
-            in
-              Fun
-                (fst . getSpan $ param, snd . getSpan $ body)
-                (P.parse name param)
-                body
-      in Fun (start, end) (P.parse name param) (assoc $ tree :| trees)
+      let assoc = \case
+            body :| [] -> P.parse term body
+            param :| tree : trees ->
+              let body = assoc $ tree :| trees
+               in Fun
+                    (fst . getSpan $ param, snd . getSpan $ body)
+                    (P.parse name param)
+                    body
+       in Fun (start, end) (P.parse name param) (assoc $ tree :| trees)
   tree@(ParenBranch span trees) -> case trees of
     [] -> TermError $ ExpectedTermTerm tree
     [_] -> TermError $ ExpectedTerm tree
     l : r : trees ->
-      let
-        assoc app = \case
-          [] -> app
-          r : trees -> assoc (App span app (P.parse term r)) trees
-      in assoc (App span (P.parse term l) (P.parse term r)) trees
+      let assoc app = \case
+            [] -> app
+            r : trees -> assoc (App span app (P.parse term r)) trees
+       in assoc (App span (P.parse term l) (P.parse term r)) trees
   leaf@(Leaf span _) -> Var span (P.parse name leaf)
   TreeError e -> TermError e
 
@@ -145,7 +142,7 @@ closeBracket = runMaybeT $ do
 word :: Parser (Pos, String) (Maybe Token)
 word = runMaybeT $ do
   start <- lift getPos
-  s <- MaybeT $ plus $ try $ satisfyM $ \ch ->
-    not (isSpace ch) && notElem ch "()[]"
+  let isWordChar ch = not (isSpace ch) && notElem ch "()[]"
+  s <- MaybeT $ plus $ try $ satisfyM isWordChar
   end <- lift getPos
   pure $ Word (start, Just $ end - 1) s

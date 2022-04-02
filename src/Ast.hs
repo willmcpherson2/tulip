@@ -1,40 +1,41 @@
 module Ast
-  ( Pos
-  , Span
-  , Ast(..)
-  , Def(..)
-  , Term(..)
-  , Name(..)
-  , Token(..)
-  , Tree(..)
-  , Error(..)
-  , GetSpan(..)
-  , Display(..)
-  ) where
+  ( Pos,
+    Span,
+    Ast (..),
+    Def (..),
+    Term (..),
+    Name (..),
+    Token (..),
+    Tree (..),
+    Error (..),
+    GetSpan (..),
+    Display (..),
+  )
+where
 
 import Data.List (intercalate)
 import Data.List.NonEmpty (NonEmpty, toList)
 
 newtype Ast = Ast [Def]
-  deriving Show
+  deriving (Show)
 
 data Def
   = Def Span Name Term
   | DefError Error
-  deriving Show
+  deriving (Show)
 
 data Term
   = Fun Span Name Term
   | App Span Term Term
   | Var Span Name
   | TermError Error
-  deriving Show
+  deriving (Show)
 
 data Name
   = Ident Span (NonEmpty Char)
   | Blank Span
   | NameError Error
-  deriving Show
+  deriving (Show)
 
 --------------------------------------------------------------------------------
 
@@ -43,7 +44,7 @@ data Tree
   | BracketBranch Span [Tree]
   | Leaf Span (NonEmpty Char)
   | TreeError Error
-  deriving Show
+  deriving (Show)
 
 --------------------------------------------------------------------------------
 
@@ -53,7 +54,7 @@ data Token
   | OpenBracket Span
   | CloseBracket Span
   | Word Span (NonEmpty Char)
-  deriving Show
+  deriving (Show)
 
 --------------------------------------------------------------------------------
 
@@ -72,7 +73,7 @@ data Error
   | EvaluatedHole Span
   | ApplicationOnSymbol Span (NonEmpty Char)
   | ApplicationOnHole Span
-  deriving Show
+  deriving (Show)
 
 --------------------------------------------------------------------------------
 
@@ -183,7 +184,8 @@ instance Display Error where
       "this opening bracket has no matching closing bracket `]`"
     ExpectedCloseParen{} ->
       "this opening paren has no matching closing paren `)`"
-    ExpectedDefTree{} -> "expected definition form: `(name term)`"
+    ExpectedDefTree{} ->
+      "expected definition form: `(name term)`"
     ExpectedNameTerm{} ->
       "expected a name and a term in definition: `(name term)`"
     ExpectedName{} -> "expected a name"
@@ -193,8 +195,13 @@ instance Display Error where
       "expected both a parameter and a body in function, but only got one"
     ExpectedTermTerm{} ->
       "expected some terms in application, got empty parens `()`"
-    ExpectedTerm{} -> "expected another term in application"
-    MainNotFound{} -> "expected a `main` definition but couldn't find one"
-    EvaluatedHole{} -> "evaluated hole `_`, evaluation terminated"
-    ApplicationOnSymbol{} -> "application on symbol, evaluation terminated"
-    ApplicationOnHole{} -> "application on hole `_`, evaluation terminated"
+    ExpectedTerm{} ->
+      "expected another term in application"
+    MainNotFound{} ->
+      "expected a `main` definition but couldn't find one"
+    EvaluatedHole{} ->
+      "evaluated hole `_`, evaluation terminated"
+    ApplicationOnSymbol{} ->
+      "application on symbol, evaluation terminated"
+    ApplicationOnHole{} ->
+      "application on hole `_`, evaluation terminated"

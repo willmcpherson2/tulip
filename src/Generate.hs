@@ -2,7 +2,7 @@ module Generate (generate) where
 
 import Ast
 import Data.List.Extra (firstJust)
-import Data.List.NonEmpty (NonEmpty((:|)))
+import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Maybe (fromMaybe)
 
 generate :: Ast -> Term

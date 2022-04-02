@@ -4,7 +4,7 @@
 !.gitignore
 !LICENSE
 !README.md
-!brittany.yaml
+!fourmolu.yaml
 !tulip.cabal
 !cabal.project
 !src

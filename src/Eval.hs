@@ -1,6 +1,6 @@
 module Eval (eval) where
 
-import Ast (Error(..), Span)
+import Ast (Error (..), Span)
 import Data.List.NonEmpty (NonEmpty)
 import Parse
 
@@ -32,9 +32,10 @@ apply span l r = case l of
 replace :: NonEmpty Char -> Term -> Term -> Term
 replace param body term = case body of
   Fun span param' body -> case param' of
-    ident@(Ident _ param') -> if param' == param
-      then Fun span ident body
-      else Fun span ident (replace param body term)
+    ident@(Ident _ param') ->
+      if param' == param
+        then Fun span ident body
+        else Fun span ident (replace param body term)
     blank@Blank{} -> Fun span blank (replace param body term)
     NameError e -> TermError e
   App span l r -> App span (replace param l term) (replace param r term)
