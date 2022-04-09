@@ -9,6 +9,7 @@ import Data.Char (isSpace)
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Parser (Parser)
 import Parser qualified as P
+import Stream (Stream (..))
 
 parse :: String -> Ast
 parse s = P.parse (ast <<< trees <<< tokens) (0, s)
