@@ -11,9 +11,9 @@ import System.Environment (getArgs)
 data Pipeline = Pipeline
   { source :: String
   , ast :: Ast
-  , messages :: [Message]
   , term :: Term
   , result :: Term
+  , messages :: [Message]
   }
   deriving (Show)
 
@@ -34,10 +34,12 @@ main =
 compile :: String -> Pipeline
 compile source =
   let ast = parse source
-      messages = getMessages source (report ast)
       term = generate ast
       result = eval term
-   in Pipeline{source, ast, messages, term, result}
+      messages = case getMessages source (report ast) of
+        [] -> getMessages source (report result)
+        ms -> ms
+   in Pipeline{source, ast, term, result, messages}
 
 dump :: String -> IO ()
 dump s =
@@ -49,13 +51,13 @@ dump s =
         , "Ast:"
         , display ast
         , ""
-        , "Errors:"
-        , display messages
-        , ""
         , "Term:"
         , display term
         , ""
         , "Result:"
         , display result
+        , ""
+        , "Errors:"
+        , display messages
         ]
    in putStr $ unlines lines
