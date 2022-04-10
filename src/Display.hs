@@ -38,28 +38,28 @@ instance Display Token where
 
 instance Display Error where
   display = \case
-    ExpectedDefToken t ->
-      "expected definition form: `(name term)`, got `" ++ display t ++ "`"
+    ExpectedDefToken{} ->
+      "expected definition\ne.g. `(name term)`"
     ExpectedCloseBracket{} ->
       "this opening bracket has no matching closing bracket `]`"
     ExpectedCloseParen{} ->
       "this opening paren has no matching closing paren `)`"
     ExpectedDefTree{} ->
-      "expected definition form: `(name term)`"
+      "expected definition\ne.g. `(name term)`"
     ExpectedNameTerm{} ->
-      "expected a name and a term in definition: `(name term)`"
+      "expected a name and a term in definition\ne.g. `(name term)`"
     ExpectedName{} ->
-      "expected a name"
+      "expected a name\ne.g. `foo`"
     ExpectedParamBody{} ->
-      "expected a parameter and a body in function, got an empty function `[]`"
+      "expected a parameter and a body in function, got an empty function `[]`\ne.g. `[param body]`"
     ExpectedBody{} ->
-      "expected both a parameter and a body in function, but only got one"
+      "expected both a parameter and a body in function, but only got one\ne.g. `[param body]`"
     ExpectedTermTerm{} ->
-      "expected some terms in application, got empty parens `()`"
+      "expected some terms in application, got empty parens `()`\ne.g. `(f x)`"
     ExpectedTerm{} ->
-      "expected another term in application"
+      "expected another term in application\ne.g. `(f x)`"
     MainNotFound{} ->
-      "expected a `main` definition but couldn't find one"
+      "expected a `main` definition but couldn't find one\ne.g. `(main [x x])`"
     EvaluatedHole{} ->
       "evaluated hole `_`, evaluation terminated"
     ApplicationOnSymbol{} ->
