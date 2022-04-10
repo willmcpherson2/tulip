@@ -5,7 +5,7 @@ import Display (Display (display))
 import Eval (eval)
 import Generate (generate)
 import Parse (parse)
-import Report (Message, Report (report), getMessages)
+import Report (Message, Report (report))
 import System.Directory (doesFileExist)
 import System.Environment (getArgs)
 
@@ -37,8 +37,8 @@ compile source =
   let ast = parse source
       term = generate ast
       result = eval term
-      messages = case getMessages source (report ast) of
-        [] -> getMessages source (report result)
+      messages = case report source ast of
+        [] -> report source result
         ms -> ms
    in Pipeline{source, ast, term, result, messages}
 

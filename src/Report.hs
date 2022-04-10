@@ -1,4 +1,4 @@
-module Report (Report (..), Message (..), getMessages) where
+module Report (Report (..), Message (..)) where
 
 import Ast hiding (Token)
 import Data.List (intercalate)
@@ -8,25 +8,28 @@ import GetSpan (GetSpan (getSpan))
 import Prelude hiding (error, lines)
 
 class Report a where
-  report :: a -> [Error]
+  getErrors :: a -> [Error]
+
+  report :: String -> a -> [Message]
+  report source = getMessages source . getErrors
 
 instance Report Ast where
-  report (Ast defs) = concatMap report defs
+  getErrors (Ast defs) = concatMap getErrors defs
 
 instance Report Def where
-  report = \case
-    Def _ name term -> report name ++ report term
+  getErrors = \case
+    Def _ name term -> getErrors name ++ getErrors term
     DefError e -> [e]
 
 instance Report Term where
-  report = \case
-    Fun _ param term -> report param ++ report term
-    App _ l r -> report l ++ report r
-    Var _ name -> report name
+  getErrors = \case
+    Fun _ param term -> getErrors param ++ getErrors term
+    App _ l r -> getErrors l ++ getErrors r
+    Var _ name -> getErrors name
     TermError e -> [e]
 
 instance Report Name where
-  report = \case
+  getErrors = \case
     NameError e -> [e]
     _ -> []
 
