@@ -188,7 +188,8 @@ instance Display Error where
       "expected definition form: `(name term)`"
     ExpectedNameTerm{} ->
       "expected a name and a term in definition: `(name term)`"
-    ExpectedName{} -> "expected a name"
+    ExpectedName{} ->
+      "expected a name"
     ExpectedParamBody{} ->
       "expected a parameter and a body in function, got an empty function `[]`"
     ExpectedBody{} ->
