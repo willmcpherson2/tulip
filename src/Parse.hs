@@ -102,43 +102,22 @@ tokens = star token
 
 token :: Parser (Pos, String) (Maybe Token)
 token =
-  try openParen
-    <<|>> try closeParen
-    <<|>> try openBracket
-    <<|>> try closeBracket
+  try (keyword '(' OpenParen)
+    <<|>> try (keyword ')' CloseParen)
+    <<|>> try (keyword '[' OpenBracket)
+    <<|>> try (keyword ']' CloseBracket)
     <<|>> try word
     <<|>> skip
 
 skip :: Parser (Pos, String) (Maybe Token)
 skip = runMaybeT $ MaybeT takeToken *> MaybeT token
 
-openParen :: Parser (Pos, String) (Maybe Token)
-openParen = runMaybeT $ do
+keyword :: Char -> (Span -> Token) -> Parser (Pos, String) (Maybe Token)
+keyword ch mk = runMaybeT $ do
   start <- lift getPos
-  MaybeT $ matchM '('
+  MaybeT $ matchM ch
   end <- lift getPos
-  pure $ OpenParen (start, Just $ end - 1)
-
-closeParen :: Parser (Pos, String) (Maybe Token)
-closeParen = runMaybeT $ do
-  start <- lift getPos
-  MaybeT $ matchM ')'
-  end <- lift getPos
-  pure $ CloseParen (start, Just $ end - 1)
-
-openBracket :: Parser (Pos, String) (Maybe Token)
-openBracket = runMaybeT $ do
-  start <- lift getPos
-  MaybeT $ matchM '['
-  end <- lift getPos
-  pure $ OpenBracket (start, Just $ end - 1)
-
-closeBracket :: Parser (Pos, String) (Maybe Token)
-closeBracket = runMaybeT $ do
-  start <- lift getPos
-  MaybeT $ matchM ']'
-  end <- lift getPos
-  pure $ CloseBracket (start, Just $ end - 1)
+  pure $ mk (start, Just $ end - 1)
 
 word :: Parser (Pos, String) (Maybe Token)
 word = runMaybeT $ do
