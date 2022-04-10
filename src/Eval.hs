@@ -1,8 +1,7 @@
 module Eval (eval) where
 
-import Ast (Error (..), Span)
+import Ast
 import Data.List.NonEmpty (NonEmpty)
-import Parse
 
 eval :: Term -> Term
 eval = \case

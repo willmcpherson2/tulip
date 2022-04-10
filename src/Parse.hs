@@ -1,4 +1,4 @@
-module Parse (Ast (..), Def (..), Term (..), Name (..), parse) where
+module Parse (parse) where
 
 import Ast
 import Combinators
