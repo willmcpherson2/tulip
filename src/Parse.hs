@@ -7,6 +7,7 @@ import Control.Monad.Trans.Class (MonadTrans (lift))
 import Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
 import Data.Char (isSpace)
 import Data.List.NonEmpty (NonEmpty ((:|)))
+import GetSpan (GetSpan (getEnd, getSpan))
 import Parser (Parser)
 import Parser qualified as P
 import Stream (Stream (..))

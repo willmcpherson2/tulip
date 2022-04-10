@@ -3,6 +3,7 @@ module Report (Report (..), Message (..), getMessages) where
 import Ast hiding (Token)
 import Data.List (intercalate)
 import Data.List.Extra (splitOn)
+import GetSpan (GetSpan (getSpan))
 import Prelude hiding (error, lines)
 
 class Report a where
