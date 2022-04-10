@@ -1,6 +1,7 @@
 module Main (Pipeline (..), main, compile, dump) where
 
-import Ast (Ast, Display (display), Term)
+import Ast (Ast, Term)
+import Display (Display (display))
 import Eval (eval)
 import Generate (generate)
 import Parse (parse)

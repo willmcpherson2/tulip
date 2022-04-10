@@ -31,6 +31,7 @@ executable tulip
     , Eval
     , Ast
     , GetSpan
+    , Display
     , Report
   build-depends:
     base
