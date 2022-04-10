@@ -1,4 +1,4 @@
-module Main (Pipeline (..), main, compile, dump) where
+module Main (Pipeline (..), main, getPipeline, getResult, putPipeline, putResult) where
 
 import Ast (Ast, Term)
 import Display (Display (display))
@@ -23,17 +23,12 @@ main =
   getArgs >>= \case
     filename : _ -> do
       doesFileExist filename >>= \case
-        True -> do
-          source <- readFile filename
-          let pipeline = compile source
-          case messages pipeline of
-            [] -> putStrLn $ display $ result pipeline
-            ms -> putStrLn $ display ms
+        True -> readFile filename >>= putResult
         False -> putStrLn "no such file exists"
     _ -> putStrLn "please supply a file"
 
-compile :: String -> Pipeline
-compile source =
+getPipeline :: String -> Pipeline
+getPipeline source =
   let ast = parse source
       term = generate ast
       result = eval term
@@ -42,9 +37,19 @@ compile source =
         ms -> ms
    in Pipeline{source, ast, term, result, messages}
 
-dump :: String -> IO ()
-dump s =
-  let Pipeline{source, ast, messages, term, result} = compile s
+getResult :: String -> String
+getResult source =
+  let pipeline = getPipeline source
+   in case messages pipeline of
+        [] -> display $ result pipeline
+        ms -> display ms
+
+putResult :: String -> IO ()
+putResult = putStrLn . getResult
+
+putPipeline :: String -> IO ()
+putPipeline s =
+  let Pipeline{source, ast, messages, term, result} = getPipeline s
       lines =
         [ "Source:"
         , source
