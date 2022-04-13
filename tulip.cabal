@@ -21,10 +21,11 @@ common shared
     -Wno-all-missed-specialisations
     -Wno-monomorphism-restriction
 
-executable tulip
+library
   import: shared
   hs-source-dirs: src
-  main-is: Main.hs
+  exposed-modules:
+    Tulip
   other-modules:
     Parse
     , Generate
@@ -36,6 +37,14 @@ executable tulip
   build-depends:
     base
     , extra
-    , directory
     , transformers
     , parss
+
+executable tulip
+  import: shared
+  hs-source-dirs: bin
+  main-is: Main.hs
+  build-depends:
+    base
+    , directory
+    , tulip

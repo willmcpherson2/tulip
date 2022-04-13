@@ -9,5 +9,7 @@
 !cabal.project
 !src
 !src/**
+!bin
+!bin/**
 !examples
 !examples/**

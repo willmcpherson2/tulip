@@ -1,4 +1,4 @@
-module Main (Pipeline (..), main, getPipeline, getResult, putPipeline, putResult) where
+module Tulip (Pipeline (..), getPipeline, getResult, putPipeline, putResult) where
 
 import Ast (Ast, Term)
 import Display (Display (display))
@@ -6,8 +6,6 @@ import Eval (eval)
 import Generate (generate)
 import Parse (parse)
 import Report (Message, Report (report))
-import System.Directory (doesFileExist)
-import System.Environment (getArgs)
 
 data Pipeline = Pipeline
   { source :: String
@@ -17,15 +15,6 @@ data Pipeline = Pipeline
   , messages :: [Message]
   }
   deriving (Show)
-
-main :: IO ()
-main =
-  getArgs >>= \case
-    filename : _ -> do
-      doesFileExist filename >>= \case
-        True -> readFile filename >>= putResult
-        False -> putStrLn "no such file exists"
-    _ -> putStrLn "please supply a file"
 
 getPipeline :: String -> Pipeline
 getPipeline source =
