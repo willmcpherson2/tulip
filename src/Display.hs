@@ -60,8 +60,6 @@ instance Display Error where
       "expected another term in application\ne.g. `(f x)`"
     MainNotFound{} ->
       "expected a `main` definition but couldn't find one\ne.g. `(main [x x])`"
-    EvaluatedHole{} ->
-      "evaluated hole `_`, evaluation terminated"
     ApplicationOnSymbol{} ->
       "application on symbol, evaluation terminated"
     ApplicationOnHole{} ->

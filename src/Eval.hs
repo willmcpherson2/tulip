@@ -17,7 +17,7 @@ evalTerm defs = \case
   App span l r -> apply defs span l r
   var@(Var _ name) -> case name of
     Ident{} -> var
-    Blank blankPos -> TermError $ EvaluatedHole blankPos
+    Blank{} -> var
     NameError e -> TermError e
   err@TermError{} -> err
 

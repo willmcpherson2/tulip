@@ -67,7 +67,6 @@ data Error
   | ExpectedTermTerm Tree
   | ExpectedTerm Tree
   | MainNotFound Span
-  | EvaluatedHole Span
   | ApplicationOnSymbol Span (NonEmpty Char)
   | ApplicationOnHole Span
   deriving (Show)

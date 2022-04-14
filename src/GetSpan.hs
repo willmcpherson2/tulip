@@ -57,6 +57,5 @@ instance GetSpan Error where
     ExpectedTermTerm tree -> getSpan tree
     ExpectedTerm tree -> getSpan tree
     MainNotFound span -> span
-    EvaluatedHole span -> span
     ApplicationOnSymbol span _ -> span
     ApplicationOnHole span -> span
