@@ -13,13 +13,9 @@ eval (Ast defs) =
 
 evalTerm :: [Def] -> Term -> Term
 evalTerm defs = \case
-  fun@Fun{} -> fun
   App span l r -> apply defs span l r
-  var@(Var _ name) -> case name of
-    Ident{} -> var
-    Blank{} -> var
-    NameError e -> TermError e
-  err@TermError{} -> err
+  Var _ (NameError e) -> TermError e
+  term -> term
 
 apply :: [Def] -> Span -> Term -> Term -> Term
 apply defs span l r = case l of
