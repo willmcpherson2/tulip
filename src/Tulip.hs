@@ -3,14 +3,12 @@ module Tulip (Pipeline (..), getPipeline, getResult, putPipeline, putResult) whe
 import Ast (Ast, Term)
 import Display (Display (display))
 import Eval (eval)
-import Generate (generate)
 import Parse (parse)
 import Report (Message, Report (report))
 
 data Pipeline = Pipeline
   { source :: String
   , ast :: Ast
-  , term :: Term
   , result :: Term
   , messages :: [Message]
   }
@@ -19,12 +17,11 @@ data Pipeline = Pipeline
 getPipeline :: String -> Pipeline
 getPipeline source =
   let ast = parse source
-      term = generate ast
-      result = eval term
+      result = eval ast
       messages = case report source ast of
         [] -> report source result
         ms -> ms
-   in Pipeline{source, ast, term, result, messages}
+   in Pipeline{source, ast, result, messages}
 
 getResult :: String -> String
 getResult source =
@@ -38,16 +35,13 @@ putResult = putStrLn . getResult
 
 putPipeline :: String -> IO ()
 putPipeline s =
-  let Pipeline{source, ast, messages, term, result} = getPipeline s
+  let Pipeline{source, ast, messages, result} = getPipeline s
       lines =
         [ "Source:"
         , source
         , ""
         , "Ast:"
         , display ast
-        , ""
-        , "Term:"
-        , display term
         , ""
         , "Result:"
         , display result

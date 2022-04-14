@@ -28,7 +28,6 @@ library
     Tulip
   other-modules:
     Parse
-    , Generate
     , Eval
     , Ast
     , GetSpan
