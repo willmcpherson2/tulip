@@ -30,12 +30,12 @@ apply n defs span l r = case l of
     err@TermError{} -> err
     l -> evalTerm n defs (App span l r)
   Var _ name -> case name of
-    Ident span ident ->
+    Ident _ ident ->
       maybe
         (TermError $ ApplicationOnSymbol span ident)
         (\l -> evalTerm n defs (App span l r))
         (resolve ident defs)
-    Blank span -> TermError $ ApplicationOnHole span
+    Blank _ -> TermError $ ApplicationOnHole span
     NameError e -> TermError e
   err@TermError{} -> err
 
