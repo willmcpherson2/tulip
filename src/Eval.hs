@@ -33,7 +33,7 @@ apply n defs span l r = case l of
     Ident span ident ->
       maybe
         (TermError $ ApplicationOnSymbol span ident)
-        (\l -> apply n defs span l r)
+        (\l -> evalTerm n defs (App span l r))
         (resolve ident defs)
     Blank span -> TermError $ ApplicationOnHole span
     NameError e -> TermError e
