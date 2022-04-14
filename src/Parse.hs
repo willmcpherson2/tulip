@@ -72,19 +72,23 @@ parenBranch :: Parser [Token] (Maybe Tree)
 parenBranch = runMaybeT $ do
   OpenParen (start, _) <- MaybeT takeToken
   ts <- lift $ star $ try tree
-  close <- lift takeToken
-  pure $ case close of
-    Just (CloseParen (_, end)) -> ParenBranch (start, end) ts
-    t -> TreeError $ ExpectedCloseParen (start, t >>= getEnd)
+  close <- lift getToken
+  case close of
+    Just (CloseParen (_, end)) -> do
+      lift takeToken
+      pure $ ParenBranch (start, end) ts
+    t -> pure $ TreeError $ ExpectedCloseParen (start, t >>= getEnd)
 
 bracketBranch :: Parser [Token] (Maybe Tree)
 bracketBranch = runMaybeT $ do
   OpenBracket (start, _) <- MaybeT takeToken
   ts <- lift $ star $ try tree
-  close <- lift takeToken
-  pure $ case close of
-    Just (CloseBracket (_, end)) -> BracketBranch (start, end) ts
-    t -> TreeError $ ExpectedCloseBracket (start, t >>= getEnd)
+  close <- lift getToken
+  case close of
+    Just (CloseBracket (_, end)) -> do
+      lift takeToken
+      pure $ BracketBranch (start, end) ts
+    t -> pure $ TreeError $ ExpectedCloseBracket (start, t >>= getEnd)
 
 leaf :: Parser [Token] (Maybe Tree)
 leaf = runMaybeT $ do
