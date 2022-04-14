@@ -53,11 +53,11 @@ instance Display Error where
     ExpectedParamBody{} ->
       "expected a parameter and a body in function, got an empty function `[]`\ne.g. `[param body]`"
     ExpectedBody{} ->
-      "expected both a parameter and a body in function, but only got one\ne.g. `[param body]`"
+      "expected a body after this parameter in function\ne.g. `[param body]`"
     ExpectedTermTerm{} ->
       "expected some terms in application, got empty parens `()`\ne.g. `(f x)`"
     ExpectedTerm{} ->
-      "expected another term in application\ne.g. `(f x)`"
+      "expected another term after this one in application\ne.g. `(f x)`"
     MainNotFound{} ->
       "expected a `main` definition but couldn't find one\ne.g. `(main [x x])`"
     ApplicationOnSymbol{} ->

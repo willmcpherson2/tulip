@@ -30,7 +30,9 @@ term :: Parser Tree Term
 term = arr $ \case
   tree@(BracketBranch (start, end) trees) -> case trees of
     [] -> TermError $ ExpectedParamBody tree
-    [_] -> TermError $ ExpectedBody tree
+    [tree] -> case tree of
+      TreeError e -> TermError e
+      _ -> TermError $ ExpectedBody tree
     param : tree : trees ->
       let assoc = \case
             body :| [] -> P.parse term body
@@ -43,7 +45,9 @@ term = arr $ \case
        in Fun (start, end) (P.parse name param) (assoc $ tree :| trees)
   tree@(ParenBranch span trees) -> case trees of
     [] -> TermError $ ExpectedTermTerm tree
-    [_] -> TermError $ ExpectedTerm tree
+    [tree] -> case tree of
+      TreeError e -> TermError e
+      _ -> TermError $ ExpectedTerm tree
     l : r : trees ->
       let assoc app = \case
             [] -> app
