@@ -59,3 +59,4 @@ instance GetSpan Error where
     MainNotFound span -> span
     ApplicationOnSymbol span _ -> span
     ApplicationOnHole span -> span
+    EvalLimit span -> span

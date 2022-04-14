@@ -17,7 +17,7 @@ data Pipeline = Pipeline
 getPipeline :: String -> Pipeline
 getPipeline source =
   let ast = parse source
-      result = eval ast
+      result = eval 1000000 ast
       messages = case report source ast of
         [] -> report source result
         ms -> ms

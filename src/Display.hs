@@ -64,3 +64,5 @@ instance Display Error where
       "application on symbol, evaluation terminated"
     ApplicationOnHole{} ->
       "application on hole `_`, evaluation terminated"
+    EvalLimit{} ->
+      "reached evaluation limit, evaluation terminated"

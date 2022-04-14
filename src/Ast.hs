@@ -69,6 +69,7 @@ data Error
   | MainNotFound Span
   | ApplicationOnSymbol Span (NonEmpty Char)
   | ApplicationOnHole Span
+  | EvalLimit Span
   deriving (Show)
 
 --------------------------------------------------------------------------------

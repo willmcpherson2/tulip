@@ -4,33 +4,36 @@ import Ast
 import Data.List.Extra (firstJust)
 import Data.List.NonEmpty (NonEmpty ((:|)))
 
-eval :: Ast -> Term
-eval (Ast defs) =
+eval :: Int -> Ast -> Term
+eval n (Ast defs) =
   maybe
     (TermError $ MainNotFound (0, Nothing))
-    (evalTerm defs)
+    (evalTerm n defs)
     (resolve ('m' :| "ain") defs)
 
-evalTerm :: [Def] -> Term -> Term
-evalTerm defs = \case
-  App span l r -> apply defs span l r
+evalTerm :: Int -> [Def] -> Term -> Term
+evalTerm n defs term = case term of
+  App span l r ->
+    if n <= 0
+      then TermError $ EvalLimit span
+      else apply (n - 1) defs span l r
   Var _ (NameError e) -> TermError e
   term -> term
 
-apply :: [Def] -> Span -> Term -> Term -> Term
-apply defs span l r = case l of
+apply :: Int -> [Def] -> Span -> Term -> Term -> Term
+apply n defs span l r = case l of
   Fun _ param body -> case param of
-    Ident _ param -> evalTerm defs (replace defs param body r)
-    Blank{} -> evalTerm defs body
+    Ident _ param -> evalTerm n defs (replace defs param body r)
+    Blank{} -> evalTerm n defs body
     NameError e -> TermError e
-  l@App{} -> case evalTerm defs l of
+  l@App{} -> case evalTerm n defs l of
     err@TermError{} -> err
-    l -> evalTerm defs (App span l r)
+    l -> evalTerm n defs (App span l r)
   Var _ name -> case name of
     Ident span ident ->
       maybe
         (TermError $ ApplicationOnSymbol span ident)
-        (\l -> apply defs span l r)
+        (\l -> apply n defs span l r)
         (resolve ident defs)
     Blank span -> TermError $ ApplicationOnHole span
     NameError e -> TermError e
