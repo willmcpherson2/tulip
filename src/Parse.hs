@@ -9,7 +9,7 @@ import Data.Char (isSpace)
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import GetSpan (GetSpan (getEnd, getSpan))
 import Parser (Parser)
-import Parser qualified as P
+import qualified Parser as P
 import Stream (Stream (..))
 
 parse :: String -> Ast
