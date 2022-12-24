@@ -1,15 +1,1 @@
-*
-*/*
-
-!.gitignore
-!LICENSE
-!README.md
-!fourmolu.yaml
-!tulip.cabal
-!cabal.project
-!src
-!src/**
-!bin
-!bin/**
-!examples
-!examples/**
+dist-newstyle
