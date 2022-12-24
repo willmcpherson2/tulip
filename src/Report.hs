@@ -36,21 +36,21 @@ instance Report Name where
 --------------------------------------------------------------------------------
 
 data Message = Message
-  { lineNum :: Pos
-  , columnNum :: Pos
-  , text :: String
-  , error :: Error
+  { lineNum :: Pos,
+    columnNum :: Pos,
+    text :: String,
+    error :: Error
   }
   deriving (Show)
 
 instance Display Message where
-  display Message{lineNum, columnNum, error, text} =
+  display Message {lineNum, columnNum, error, text} =
     intercalate
       "\n"
-      [ displaySpan lineNum columnNum
-      , display error
-      , pointAt columnNum
-      , text
+      [ displaySpan lineNum columnNum,
+        display error,
+        pointAt columnNum,
+        text
       ]
 
 instance Display [Message] where
@@ -74,17 +74,17 @@ getMessages source = map (getMessage source)
 getMessage :: String -> Error -> Message
 getMessage source error =
   let span = getSpan error
-      Sections{leftLines, prefix, mid, suffix} = getSections span source
+      Sections {leftLines, prefix, mid, suffix} = getSections span source
       lineNum = length leftLines
       columnNum = length prefix
       text = prefix ++ mid ++ suffix
-   in Message{lineNum, columnNum, text, error}
+   in Message {lineNum, columnNum, text, error}
 
 data Sections = Sections
-  { leftLines :: [String]
-  , prefix :: String
-  , mid :: String
-  , suffix :: String
+  { leftLines :: [String],
+    prefix :: String,
+    mid :: String,
+    suffix :: String
   }
 
 getSections :: Span -> String -> Sections
@@ -99,4 +99,4 @@ getSections (start, end) source =
       (prefix, leftLines) = case reverse $ splitOn "\n" left' of
         [] -> ("", [])
         x : xs -> (x, xs)
-   in Sections{leftLines, prefix, mid, suffix}
+   in Sections {leftLines, prefix, mid, suffix}

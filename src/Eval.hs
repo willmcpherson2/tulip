@@ -24,10 +24,10 @@ apply :: Int -> [Def] -> Span -> Term -> Term -> Term
 apply n defs span l r = case l of
   Fun _ param body -> case param of
     Ident _ param -> evalTerm n defs (replace defs param body r)
-    Blank{} -> evalTerm n defs body
+    Blank {} -> evalTerm n defs body
     NameError e -> TermError e
-  l@App{} -> case evalTerm n defs l of
-    err@TermError{} -> err
+  l@App {} -> case evalTerm n defs l of
+    err@TermError {} -> err
     l -> evalTerm n defs (App span l r)
   Var _ name -> case name of
     Ident _ ident ->
@@ -37,7 +37,7 @@ apply n defs span l r = case l of
         (resolve ident defs)
     Blank _ -> TermError $ ApplicationOnHole span
     NameError e -> TermError e
-  err@TermError{} -> err
+  err@TermError {} -> err
 
 replace :: [Def] -> NonEmpty Char -> Term -> Term -> Term
 replace defs param body term = case body of
@@ -46,14 +46,14 @@ replace defs param body term = case body of
       if param' == param
         then Fun span ident body
         else Fun span ident (replace defs param body term)
-    blank@Blank{} -> Fun span blank (replace defs param body term)
+    blank@Blank {} -> Fun span blank (replace defs param body term)
     NameError e -> TermError e
   App span l r -> App span (replace defs param l term) (replace defs param r term)
   Var span name -> case name of
     Ident _ ident -> if ident == param then term else Var span name
-    Blank{} -> Var span name
+    Blank {} -> Var span name
     NameError e -> TermError e
-  err@TermError{} -> err
+  err@TermError {} -> err
 
 --------------------------------------------------------------------------------
 

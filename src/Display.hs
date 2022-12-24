@@ -25,44 +25,44 @@ instance Display Term where
 instance Display Name where
   display = \case
     Ident _ s -> toList s
-    Blank{} -> "_"
+    Blank {} -> "_"
     NameError e -> display e
 
 instance Display Token where
   display = \case
-    OpenParen{} -> "("
-    CloseParen{} -> ")"
-    OpenBracket{} -> "["
-    CloseBracket{} -> "]"
+    OpenParen {} -> "("
+    CloseParen {} -> ")"
+    OpenBracket {} -> "["
+    CloseBracket {} -> "]"
     Word _ s -> toList s
 
 instance Display Error where
   display = \case
-    ExpectedDefToken{} ->
+    ExpectedDefToken {} ->
       "expected definition\ne.g. `(name term)`"
-    ExpectedCloseBracket{} ->
+    ExpectedCloseBracket {} ->
       "this opening bracket has no matching closing bracket `]`"
-    ExpectedCloseParen{} ->
+    ExpectedCloseParen {} ->
       "this opening paren has no matching closing paren `)`"
-    ExpectedDefTree{} ->
+    ExpectedDefTree {} ->
       "expected definition\ne.g. `(name term)`"
-    ExpectedNameTerm{} ->
+    ExpectedNameTerm {} ->
       "expected a name and a term in definition\ne.g. `(name term)`"
-    ExpectedName{} ->
+    ExpectedName {} ->
       "expected a name\ne.g. `foo`"
-    ExpectedParamBody{} ->
+    ExpectedParamBody {} ->
       "expected a parameter and a body in function, got an empty function `[]`\ne.g. `[param body]`"
-    ExpectedBody{} ->
+    ExpectedBody {} ->
       "expected a body after this parameter in function\ne.g. `[param body]`"
-    ExpectedTermTerm{} ->
+    ExpectedTermTerm {} ->
       "expected some terms in application, got empty parens `()`\ne.g. `(f x)`"
-    ExpectedTerm{} ->
+    ExpectedTerm {} ->
       "expected another term after this one in application\ne.g. `(f x)`"
-    MainNotFound{} ->
+    MainNotFound {} ->
       "expected a `main` definition but couldn't find one\ne.g. `(main [x x])`"
-    ApplicationOnSymbol{} ->
+    ApplicationOnSymbol {} ->
       "application on symbol, evaluation terminated"
-    ApplicationOnHole{} ->
+    ApplicationOnHole {} ->
       "application on hole `_`, evaluation terminated"
-    EvalLimit{} ->
+    EvalLimit {} ->
       "reached evaluation limit, evaluation terminated"

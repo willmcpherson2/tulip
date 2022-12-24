@@ -7,10 +7,10 @@ import Parse (parse)
 import Report (Message, Report (report))
 
 data Pipeline = Pipeline
-  { source :: String
-  , ast :: Ast
-  , result :: Term
-  , messages :: [Message]
+  { source :: String,
+    ast :: Ast,
+    result :: Term,
+    messages :: [Message]
   }
   deriving (Show)
 
@@ -21,7 +21,7 @@ getPipeline source =
       messages = case report source ast of
         [] -> report source result
         ms -> ms
-   in Pipeline{source, ast, result, messages}
+   in Pipeline {source, ast, result, messages}
 
 getResult :: String -> String
 getResult source =
@@ -35,18 +35,18 @@ putResult = putStrLn . getResult
 
 putPipeline :: String -> IO ()
 putPipeline s =
-  let Pipeline{source, ast, messages, result} = getPipeline s
+  let Pipeline {source, ast, messages, result} = getPipeline s
       lines =
-        [ "Source:"
-        , source
-        , ""
-        , "Ast:"
-        , display ast
-        , ""
-        , "Result:"
-        , display result
-        , ""
-        , "Errors:"
-        , display messages
+        [ "Source:",
+          source,
+          "",
+          "Ast:",
+          display ast,
+          "",
+          "Result:",
+          display result,
+          "",
+          "Errors:",
+          display messages
         ]
    in putStr $ unlines lines
